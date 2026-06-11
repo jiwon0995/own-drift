@@ -1,3 +1,6 @@
+/** 인앱 화면 식별자 — useScreenFlow 전환 키 */
+export type Screen = 'title' | 'tutorial' | 'findPace';
+
 /** 속도 (단위: units/s, abstract). 항상 > 0 — 완전 정지 없음. */
 export type Speed = number;
 

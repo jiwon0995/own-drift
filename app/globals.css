@@ -82,6 +82,12 @@
     border-radius: 0;
   }
 
+  /* SpeechBubble 깜빡 커서 */
+  .cursor-blink {
+    animation: blink 0.5s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
   /* 스캔라인 + 비네팅: ::after pseudo-element 용 */
   .scanline-vignette::after {
     content: '';
