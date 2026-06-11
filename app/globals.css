@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ================================================================
+   DESIGN TOKENS — Tailwind v4 @theme
+   ================================================================ */
+@theme {
+  /* surfaces */
+  --color-base:           #17100f;
+  --color-game:           #2b1a17;
+  --color-game-unstable:  #1c1a1f;
+
+  /* banners */
+  --color-banner-idle:    #241a17;
+  --color-banner-loud:    #3a2a22;
+  --color-banner-company: #2b1a17;
+
+  /* ink */
+  --color-ink-primary:    #f3e6d8;
+  --color-ink-soft:       #b89a86;
+  --color-ink-faint:      #7a6256;
+
+  /* accent */
+  --color-accent-stable:   #ffb257;
+  --color-accent-unstable: #7e8a99;
+  --color-accent-neutral:  #c8a98f;
+
+  /* gauge */
+  --color-gauge-track: #3a2a22;
+  --color-gauge-fill:  #ff9614;
+
+  /* character */
+  --color-fig-player: #ffb257;
+  --color-fig-other:  #6b5a4e;
+
+  /* type scale */
+  --text-title:   46px;
+  --text-heading: 22px;
+  --text-body:    17px;
+  --text-label:   13px;
+  --text-note:    11px;
+
+  /* pixel font stack */
+  --font-pixel: 'DungGeunMo', 'Press Start 2P', 'Apple SD Gothic Neo',
+                'Malgun Gothic', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ================================================================
+   FONT — self-hosted, @layer base (only place raw CSS is allowed)
+   ================================================================ */
+@layer base {
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('/fonts/DungGeunMo.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    background-color: #17100f;
+    color: #f3e6d8;
+  }
+
+  body {
+    font-family: 'DungGeunMo', 'Apple SD Gothic Neo', 'Malgun Gothic', monospace;
+    image-rendering: pixelated;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ================================================================
+   REUSABLE RETRO EFFECTS — @layer components
+   ================================================================ */
+@layer components {
+  /* 픽셀 프레임: 다중 inset shadow 액자 */
+  .pixel-frame {
+    border: 4px solid #0a0706;
+    box-shadow:
+      inset 0 0 0 2px #3a2a22,
+      inset 0 0 0 4px #0a0706,
+      0 0 0 2px #2b1a17,
+      8px 8px 0 0 rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+  }
+
+  /* 스캔라인 + 비네팅: ::after pseudo-element 용 */
+  .scanline-vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+    mix-blend-mode: multiply;
+  }
 }
