@@ -1,24 +1,29 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { stepSpeed }        from '@/lib/game/engine';
-import { stepAnchorGauge }  from '@/lib/game/pace';
-import { GAME_CONSTANTS }   from '@/lib/game/constants';
-import { GamePhase }        from '@/lib/game/types';
-import type { AnchorGaugeState, LoopSnapshot } from '@/lib/game/types';
-import { useHoldInput }     from './useHoldInput';
+import { stepSpeed }                          from '@/lib/game/engine';
+import { stepAnchorGauge, isInBand, stepStabilityGauge } from '@/lib/game/pace';
+import { GAME_CONSTANTS }                     from '@/lib/game/constants';
+import { GamePhase }                          from '@/lib/game/types';
+import type { AnchorGaugeState, LoopSnapshot, Band, HysteresisState } from '@/lib/game/types';
+import { useHoldInput }                       from './useHoldInput';
 
 interface UseGameLoopOptions {
-  bgRef?:     React.RefObject<HTMLElement | null>;
-  constants?: Partial<Record<keyof typeof GAME_CONSTANTS, number>>;
-  ambient?:   boolean;
+  bgRef?:       React.RefObject<HTMLElement | null>;
+  constants?:   Partial<Record<keyof typeof GAME_CONSTANTS, number>>;
+  ambient?:     boolean;
+  /** 확정된 내 구간 — 있으면 매 프레임 안정 게이지 계산(Main Play). null이면 비활성. */
+  band?:        Band | null;
+  /** 안정 게이지 가득 찰 때 발생(루프가 리셋). 2C·Phase 3가 소비. */
+  onStabilized?: () => void;
 }
 
 interface UseGameLoopReturn {
-  snapshot:    LoopSnapshot;
-  start:       () => void;
-  stop:        () => void;
-  resetAnchor: () => void;
+  snapshot:        LoopSnapshot;
+  start:           () => void;
+  stop:            () => void;
+  resetAnchor:     () => void;
+  resetStability:  () => void;
 }
 
 export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn {
@@ -54,13 +59,23 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
   const cRef = useRef(c);
   cRef.current = c;
 
+  // 안정 게이지(Phase 2B) — band가 있을 때만 활성. ref+루프, UI는 스냅샷.
+  const bandRef = useRef<Band | null>(options.band ?? null);
+  bandRef.current = options.band ?? null;
+  const onStabilizedRef = useRef(options.onStabilized);
+  onStabilizedRef.current = options.onStabilized;
+  const stabilityRef  = useRef<number>(0);
+  const hysteresisRef = useRef<HysteresisState>({ inBand: false });
+
   // ── UI 스냅샷 ─────────────────────────────────────────────────────
   const [snapshot, setSnapshot] = useState<LoopSnapshot>({
-    speed:         c.START_SPEED,
-    phase:         GamePhase.Idle,
-    holding:       false,
-    gaugeProgress: 0,
-    emaSpeed:      c.START_SPEED,
+    speed:             c.START_SPEED,
+    phase:             GamePhase.Idle,
+    holding:           false,
+    gaugeProgress:     0,
+    emaSpeed:          c.START_SPEED,
+    stabilityProgress: 0,
+    inBand:            false,
   });
 
   // ── rAF 루프 ──────────────────────────────────────────────────────
@@ -88,14 +103,27 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     // 안착 게이지 매 프레임 계산
     anchorRef.current = stepAnchorGauge(anchorRef.current, speedRef.current, holdingRef.current, dt, cc);
 
+    // 안정 게이지 — 내 구간이 설정된 동안(Main Play)만. 히스테리시스로 경계 떨림 방지.
+    const band = bandRef.current;
+    if (band && !ambientRef.current) {
+      hysteresisRef.current = isInBand(speedRef.current, band, hysteresisRef.current, cc.HYSTERESIS_MARGIN);
+      stabilityRef.current  = stepStabilityGauge(stabilityRef.current, hysteresisRef.current.inBand, dt, cc);
+      if (stabilityRef.current >= cc.STABILITY_GAUGE_FULL) {
+        stabilityRef.current = 0;          // 가득 → 리셋 ("한 번 찾음")
+        onStabilizedRef.current?.();        // 이벤트만 노출 — 카운트/클리어는 2C
+      }
+    }
+
     if (timestamp - lastSnapshotRef.current >= cc.UI_THROTTLE_MS) {
       lastSnapshotRef.current = timestamp;
       setSnapshot({
-        speed:         speedRef.current,
-        phase:         phaseRef.current,
-        holding:       holdingRef.current,
-        gaugeProgress: anchorRef.current.progress,
-        emaSpeed:      anchorRef.current.emaSpeed,
+        speed:             speedRef.current,
+        phase:             phaseRef.current,
+        holding:           holdingRef.current,
+        gaugeProgress:     anchorRef.current.progress,
+        emaSpeed:          anchorRef.current.emaSpeed,
+        stabilityProgress: stabilityRef.current,
+        inBand:            hysteresisRef.current.inBand,
       });
     }
 
@@ -135,10 +163,16 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     setSnapshot(s => ({ ...s, gaugeProgress: 0, emaSpeed: speedRef.current }));
   }, []);
 
+  const resetStability = useCallback(() => {
+    stabilityRef.current  = 0;
+    hysteresisRef.current = { inBand: false };
+    setSnapshot(s => ({ ...s, stabilityProgress: 0, inBand: false }));
+  }, []);
+
   useEffect(() => {
     start();
     return stop;
   }, [start, stop]);
 
-  return { snapshot, start, stop, resetAnchor };
+  return { snapshot, start, stop, resetAnchor, resetStability };
 }

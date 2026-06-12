@@ -11,20 +11,22 @@ import { GAUGE_COPY } from '@/lib/content/copy';
 interface StabilityGaugeProps {
   progress: number;
   full:     number;
+  /** 라벨 텍스트. 기본은 Find Pace 안착 라벨. Main Play는 stabilizing 전달. */
+  label?:   string;
 }
 
 const reducedMotion =
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function StabilityGauge({ progress, full }: StabilityGaugeProps) {
+export default function StabilityGauge({ progress, full, label = GAUGE_COPY.anchoring }: StabilityGaugeProps) {
   const ratio   = reducedMotion ? 0 : Math.min(1, Math.max(0, progress / full));
   const fillPct = Math.round(ratio * 100);
 
   return (
     <div className="flex flex-col items-center gap-[8px]">
       <span className="font-pixel text-body text-ink-faint">
-        {GAUGE_COPY.anchoring}
+        {label}
       </span>
 
       {/* 외곽 — 이중 픽셀 테두리 */}
