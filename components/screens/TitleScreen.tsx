@@ -36,13 +36,13 @@ export default function TitleScreen({ onAdvance }: TitleScreenProps) {
           zIndex:     9,
         }}
       >
-        나의 속도
+        Own Drift
       </div>
 
       {/* 말풍선 — bubbleTop:300 (game-screens.html Title 기준) */}
       <div
         className="absolute left-0 right-0 flex justify-center px-8"
-        style={{ top: 300, zIndex: 10 }}
+        style={{ top: 200, zIndex: 10 }}
       >
         <SpeechBubble
           text={SCREEN_COPY.title.bubble}
@@ -55,7 +55,7 @@ export default function TitleScreen({ onAdvance }: TitleScreenProps) {
       <div
         className="absolute left-0 right-0 flex justify-center pointer-events-auto"
         style={{
-          bottom:     52,
+          bottom:     150,
           zIndex:     10,
           opacity:    bubbleDone ? 1 : 0,
           transition: 'opacity 0.6s ease',
