@@ -46,6 +46,11 @@ export default function PixelRunner({ speed, paused = false }: PixelRunnerProps)
   const [frame, setFrame] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // speed를 ref로 올려 타이머 클로저가 항상 최신값을 참조.
+  // deps에서 제외해 speed 변경 시 타이머 리셋 없음 → 발 멈춤 현상 방지.
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
+
   const reducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -56,11 +61,13 @@ export default function PixelRunner({ speed, paused = false }: PixelRunnerProps)
 
     function step() {
       setFrame(f => (f + 1) % 4);
-      intervalRef.current = setTimeout(step, frameInterval(speed));
+      intervalRef.current = setTimeout(step, frameInterval(speedRef.current));
     }
-    intervalRef.current = setTimeout(step, frameInterval(speed));
+    intervalRef.current = setTimeout(step, frameInterval(speedRef.current));
     return () => { if (intervalRef.current) clearTimeout(intervalRef.current); };
-  }, [speed, paused, reducedMotion]);
+  // speed는 ref로 관리 — deps 제외로 타이머 연속성 유지
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, reducedMotion]);
 
   const shadow = buildShadow(RUN[frame], '#ffb257');
 
