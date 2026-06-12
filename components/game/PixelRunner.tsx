@@ -59,10 +59,10 @@ const GAIT_INTERVAL: Record<Gait, [number, number]> = {
 
 /** gait별 bounce 진폭 (로컬 px, RUNNER_BOUNCE_PX 곱하기 전) */
 const GAIT_BOUNCE: Record<Gait, number> = {
-  walk:   1,
-  jog:    1.5,
-  run:    2,
-  sprint: 3,
+  walk:   0.3,
+  jog:    0.7,
+  run:    1.0,
+  sprint: 1.5,
 };
 
 function lerp(a: number, b: number, t: number): number {
