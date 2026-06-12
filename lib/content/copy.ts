@@ -29,3 +29,19 @@ export const TUTORIAL_STEP_COPY: Record<TutorialStep, { bubble: string }> = {
 export const GAUGE_COPY = {
   anchoring: '머무는 중…',
 } as const;
+
+/**
+ * FindPace 상황별 유도 힌트.
+ * - idle:  입력 없이 머물 때 → 달려보라고 권유
+ * - held:  계속 누르고만 있을 때 → 떼보라고 권유
+ * - howto: 게이지를 못 채울 때 단계별 안내 (점점 구체적으로)
+ */
+export const FIND_PACE_HINTS = {
+  idle: '천천히 가는 것도 좋지만,\n가끔 달려보면 새로운 풍경을 만날 수 있어요.',
+  held: '너무 빠르게 달리기만 하면,\n중요한 걸 놓칠 수도 있어요.',
+  howto: [
+    '편안한 빠르기를 찾으면,\n그 리듬을 기억해보세요.',
+    '눌렀다 떼기를,\n천천히 반복해보세요.',
+    '같은 박자로 눌렀다 떼면,\n그게 당신의 속도가 돼요.',
+  ],
+} as const;
