@@ -1,7 +1,7 @@
 import type { Screen } from '@/lib/game/types';
 
 /** 화면별 말풍선 문구. \n = 줄바꿈. */
-export const SCREEN_COPY: Record<Exclude<Screen, 'tutorial'>, { bubble: string }> = {
+export const SCREEN_COPY: Record<Exclude<Screen, 'tutorial' | 'mainPlay'>, { bubble: string }> = {
   title: {
     bubble: '달리지 않아도 괜찮아요.\n먼저, 당신의 속도를 들어볼게요.',
   },
@@ -24,3 +24,26 @@ export const TUTORIAL_STEP_COPY: Record<TutorialStep, { bubble: string }> = {
     bubble: '좋아요.\n속도는 언제든 바뀔 수 있어요.',
   },
 };
+
+/** FindPace 안착 게이지 라벨 */
+export const GAUGE_COPY = {
+  anchoring: '머무는 중…',
+} as const;
+
+/**
+ * FindPace 상황별 유도 힌트.
+ * - idle:  입력 없이 머물 때 → 달려보라고 권유
+ * - held:  계속 누르고만 있을 때 → 떼보라고 권유
+ * - howto: 게이지를 못 채울 때 단계별 안내 (점점 구체적으로)
+ */
+export const FIND_PACE_HINTS = {
+  idle: '천천히 가는 것도 좋지만,\n가끔 달려보면 새로운 풍경을 만날 수 있어요.',
+  held: '너무 빠르게 달리기만 하면,\n중요한 걸 놓칠 수도 있어요.',
+  howto: [
+    '편안한 빠르기를 찾으면,\n그 리듬을 기억해보세요.',
+    '눌렀다 떼기를,\n천천히 반복해보세요.',
+    '같은 박자로 눌렀다 떼면,\n그게 당신의 속도가 돼요.',
+    '숨을 고르듯,\n일정한 간격으로 이어가 보세요.',
+    '조급해하지 않아도 돼요.\n천천히, 당신만의 리듬으로.',
+  ],
+} as const;

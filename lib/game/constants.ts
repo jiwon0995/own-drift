@@ -15,10 +15,10 @@ export const GAME_CONSTANTS = {
   START_SPEED: 0.6,
 
   /** 홀드 중 가속도 (units/s²). 크게 할수록 빠르게 MAX에 도달. */
-  ACCEL: 1.5,
+  ACCEL: 1.0,
 
   /** 릴리스 후 감속도 (units/s²). 크게 할수록 MIN으로 빨리 복귀. */
-  DECEL: 1.0,
+  DECEL: 0.5,
 
   /**
    * 프레임 dt 캡 (초).
@@ -43,10 +43,10 @@ export const GAME_CONSTANTS = {
   TITLE_AMBIENT_SPEED: 0.45,
 
   /** Tutorial fast 스텝: 이 시간(초) 동안 홀드하면 slow로 전환. */
-  TUTORIAL_FAST_HOLD_SEC: 1.5,
+  TUTORIAL_FAST_HOLD_SEC: 3.0,
 
   /** Tutorial slow 스텝: 이 시간(초) 동안 릴리스(비홀드) 상태면 done으로 전환. */
-  TUTORIAL_SLOW_RELEASE_SEC: 5.0,
+  TUTORIAL_SLOW_RELEASE_SEC: 3.0,
 
   /** 튜토리얼 스텝당 폴백 타임아웃(초). 조작 없어도 이 시간 후 자동 진행. */
   TUTORIAL_FALLBACK_SEC: 9,
@@ -57,9 +57,81 @@ export const GAME_CONSTANTS = {
   /**
    * 러너 상하 바운스 진폭 (스프라이트 로컬 px).
    * GameStage에서 scale(3) 적용되므로 1px = 화면 3px.
-   * 높이면 강한 까딱, 낮추면 미세한 진동.
    */
   RUNNER_BOUNCE_PX: 1,
+
+  // ── Phase 2A: Find Pace 안착 게이지 ────────────────────────────────
+
+  /** 그루브(리듬 일치) 유지 시 연속 충전 속도 (단위/s) — 천천히 차오르는 크리프. */
+  ANCHOR_FILL_RATE: 0.12,
+
+  /** 리듬이 깨졌을 때 방전 속도 (단위/s). */
+  ANCHOR_DRAIN_RATE: 0.18,
+
+  /** 비트(누름/뗌)마다 일치도에 따라 게이지를 즉각 가감하는 양 — on/off 연동감의 핵심. */
+  RHYTHM_BEAT_KICK: 0.05,
+
+  /** 누름/뗌 지속시간 상대 오차 허용폭. 0.45 = 평소의 ±45%까지 같은 리듬으로 인정. */
+  RHYTHM_TOLERANCE: 0.45,
+
+  /** matchScore가 이 값 이상이어야 연속 충전. 미만이면 유예 후 방전. */
+  RHYTHM_MATCH_THRESHOLD: 0.5,
+
+  /** 현재 세그먼트가 평소의 N배 넘게 길면 '멈춤' — 무한 홀드/장기 정지 차단. */
+  RHYTHM_STUCK_FACTOR: 2.0,
+
+  /** 멈춤 감지 시 matchScore 감쇠 속도 (단위/s). */
+  RHYTHM_STUCK_DECAY: 1.5,
+
+  /** 이보다 긴 누름/뗌은 리듬이 아니라 '탐색 멈춤'으로 보고 무시 (초). */
+  RHYTHM_MAX_SEGMENT: 3.5,
+
+  /** 이보다 짧은 토글은 채터로 보고 무시 (초). */
+  RHYTHM_MIN_SEGMENT: 0.08,
+
+  /** 채점된 세그먼트가 이 수 이상이어야 충전 시작 (리듬 워밍업). */
+  RHYTHM_WARMUP: 2,
+
+  /** emaHold/emaRelease per-beat 평활 계수. 클수록 최근 비트에 빠르게 적응. */
+  DURATION_ALPHA: 0.4,
+
+  /** matchScore per-beat 평활 계수. */
+  MATCH_ALPHA: 0.5,
+
+  /** 저조한 일치가 이 시간(초) 지속돼야 방전 — 한두 박 어긋남 흡수. */
+  STABILITY_GRACE: 0.6,
+
+  /** 게이지 최대치. 이 값에 도달하면 myPace 확정. */
+  ANCHOR_GAUGE_FULL: 1.0,
+
+  /**
+   * 속도 slow EMA 시상수 (초). myPace 값(리듬의 평균 속도) 산출용.
+   * 여러 on/off 사이클을 평균내므로 크게 설정해 개별 입력에 덜 흔들리게 한다.
+   */
+  EMA_TAU: 3.0,
+
+  /** myPace 기준 band 허용 범위 (±비율). 0.15 = ±15%. */
+  TOLERANCE: 0.15,
+
+  /** isInBand 히스테리시스 마진. enter/exit 임계 분리에 사용. */
+  HYSTERESIS_MARGIN: 0.02,
+
+  // ── Find Pace 유도 힌트 타이밍 ─────────────────────────────────────
+
+  /** 입력 전환 없이 이 시간(초) 지나면 idle/held 힌트 노출. */
+  FINDPACE_HINT_IDLE_SEC: 8.0,
+
+  /** how-to 힌트 첫 노출 시점 (화면 진입 후 누적 초). idle/held(8s)보다 늦게 둬 충돌 방지. */
+  FINDPACE_HINT_HOWTO_START_SEC: 10,
+
+  /** how-to 힌트 단계 전환 간격 (초). 클수록 한 메시지를 더 오래 보여줌(읽을 시간). */
+  FINDPACE_HINT_HOWTO_INTERVAL_SEC: 8,
+
+  /** 게이지가 이 값 이상이면 how-to 유도 숨김 — 이미 방법을 찾은 것으로 간주. */
+  FINDPACE_HINT_PROGRESS_GATE: 0.15,
+
+  /** 힌트 최소 유지 시간(ms) — 읽을 시간 확보 + 깜빡임 방지(차분한 톤). */
+  FINDPACE_HINT_HOLD_MS: 4500,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
