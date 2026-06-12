@@ -35,6 +35,12 @@ export const GAME_CONSTANTS = {
 
   /** UI 스냅샷 스로틀 간격 (ms). 디버그 HUD 리렌더 빈도. */
   UI_THROTTLE_MS: 100,
+
+  /**
+   * Title 화면 ambient 주행 속도.
+   * Spacebar 입력 없이 고정. MIN_SPEED보다 살짝 높아 배경이 은근히 흐른다.
+   */
+  TITLE_AMBIENT_SPEED: 0.45,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;

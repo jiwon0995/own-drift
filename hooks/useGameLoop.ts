@@ -10,8 +10,13 @@ import { useHoldInput } from './useHoldInput';
 interface UseGameLoopOptions {
   /** 배경 스크롤 DOM ref. 매 프레임 backgroundPositionX를 직접 씀. */
   bgRef?: React.RefObject<HTMLElement | null>;
-  /** constants 오버라이드 — dev 슬라이더 튜닝용. as const 리터럴 타입 방지를 위해 Partial<Record>. */
+  /** constants 오버라이드 — dev 슬라이더 튜닝용. */
   constants?: Partial<Record<keyof typeof GAME_CONSTANTS, number>>;
+  /**
+   * ambient 모드 — TITLE_AMBIENT_SPEED 고정 주행, Spacebar 입력 무시.
+   * Title 화면용. 렌더마다 갱신되는 ref로 관리해 tick 클로저 재생성 없음.
+   */
+  ambient?: boolean;
 }
 
 interface UseGameLoopReturn {
@@ -23,6 +28,10 @@ interface UseGameLoopReturn {
 
 export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn {
   const c = { ...GAME_CONSTANTS, ...options.constants };
+
+  // ambient: 렌더마다 최신값으로 갱신 (tick 클로저가 ref를 통해 참조)
+  const ambientRef = useRef(options.ambient ?? false);
+  ambientRef.current = options.ambient ?? false;
 
   // ── 고빈도 상태: ref (React 렌더 트리거 X) ──────────────────────────
   const speedRef        = useRef<number>(c.START_SPEED);
@@ -46,14 +55,17 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
       lastTimeRef.current = timestamp;
     }
 
-    const rawDt = (timestamp - lastTimeRef.current) / 1000; // ms → s
-    const dt    = Math.min(rawDt, c.MAX_DT);                // 탭 복귀 점프 방지
+    const rawDt = (timestamp - lastTimeRef.current) / 1000;
+    const dt    = Math.min(rawDt, c.MAX_DT);
     lastTimeRef.current = timestamp;
 
-    // 속도 갱신 (순수 함수)
-    speedRef.current = stepSpeed(speedRef.current, holdingRef.current, dt, c);
+    // ambient: 고정 속도 / normal: 입력 반영 stepSpeed
+    if (ambientRef.current) {
+      speedRef.current = c.TITLE_AMBIENT_SPEED;
+    } else {
+      speedRef.current = stepSpeed(speedRef.current, holdingRef.current, dt, c);
+    }
 
-    // 배경 스크롤 offset 누적
     scrollOffsetRef.current += speedRef.current * dt * c.BG_SCROLL_PX_PER_UNIT;
 
     // DOM 직접 쓰기 — React 리렌더 없이 배경 이동
@@ -74,10 +86,12 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   const start = useCallback(() => {
     if (phaseRef.current === GamePhase.Active) return;
-    phaseRef.current   = GamePhase.Active;
-    speedRef.current   = c.START_SPEED;
+    phaseRef.current    = GamePhase.Active;
+    speedRef.current    = ambientRef.current
+      ? GAME_CONSTANTS.TITLE_AMBIENT_SPEED
+      : c.START_SPEED;
     lastTimeRef.current = null;
-    rafIdRef.current   = requestAnimationFrame(tick);
+    rafIdRef.current    = requestAnimationFrame(tick);
     setSnapshot(s => ({ ...s, phase: GamePhase.Active }));
   }, [tick, c.START_SPEED]);
 
@@ -87,7 +101,6 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     setSnapshot(s => ({ ...s, phase: GamePhase.Idle }));
   }, []);
 
-  // 마운트 시 자동 시작, 언마운트 시 정리
   useEffect(() => {
     start();
     return stop;
