@@ -82,7 +82,7 @@ export default function GameStage({ ambient = false, children }: GameStageProps)
         <div
           className="absolute z-[8]"
           style={{
-            bottom:    92,
+            bottom:    100,
             left:      '48%',
             transform: 'translateX(-50%) scale(3)',
             transformOrigin: 'bottom center',
