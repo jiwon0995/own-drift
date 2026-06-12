@@ -10,40 +10,23 @@ import type { AnchorConstants, AnchorGaugeState, Band, HysteresisState } from '.
 
 // ── 내부 헬퍼 ──────────────────────────────────────────────────────────
 
-/**
- * 극단 속도 패널티 계수 (0.5 ~ 1.0).
- * MIN/MAX 근처일수록 충전이 살짝 더디고, 중간 구간은 전부 1.0.
- */
-function edgePenalty(speed: number, c: AnchorConstants): number {
-  const range = c.MAX_SPEED - c.MIN_SPEED;
-  const dMin  = (speed - c.MIN_SPEED) / range; // 0=MIN, 1=MAX
-  const dMax  = (c.MAX_SPEED - speed) / range;
-  const e     = c.EXTREME_EDGE;
-  if (dMin < e) return 0.5 + 0.5 * (dMin / e);
-  if (dMax < e) return 0.5 + 0.5 * (dMax / e);
-  return 1.0;
-}
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 // ── 공개 순수 함수 ─────────────────────────────────────────────────────
 
 /**
- * 안착 게이지 1프레임 진행.
+ * 안착 게이지 1프레임 진행 — 입력 리듬 기반.
  *
- * "특정 속도 타깃 없음 — 변동 없이 유지하면 충전."
- * EMA 추적으로 변동폭(emaDev)을 산출하고, STABILITY_WINDOW 이하면 안착 중으로 판정.
- * 극단 속도에서 살짝 패널티, 불안정 시 방전.
- */
-/**
- * 안착 게이지 1프레임 진행.
+ * 핵심: "내 속도 = 내가 반복할 수 있는 on/off 리듬."
+ * 특정 목표 속도가 없다. 누름(hold)과 뗌(release)의 지속시간을 각각 추적하고,
+ * 새 세그먼트가 평소 패턴과 얼마나 일치하는지(matchScore)를 본다.
  *
- * "일정한 on/off 리듬이 있으면 충전, 무한 홀드는 RHYTHM_TIMEOUT 후 정지."
+ * - 매 비트(누름/뗌 종료)마다 일치도에 따라 게이지를 즉각 가감 → on/off 연동감
+ * - 그루브(matchScore ≥ 임계)를 유지하면 천천히 연속 충전
+ * - 무한 홀드/장기 정지는 세그먼트가 평소의 STUCK_FACTOR배를 넘으면 멈춤으로 보고 일치도 급감
+ * - 한두 박 어긋남은 STABILITY_GRACE로 흡수 (즉시 0으로 떨어지지 않음)
  *
- * 1) slow EMA (TAU=3s): 여러 on/off 사이클을 평균내어 "평균 페이스" 추적
- * 2) emaChange = |newEma - oldEma|: slow EMA 변화율
- * 3) emaDev = EMA(emaChange, STABILITY_TAU): 변화율이 잔잔한지 (stable 판정)
- * 4) hasRhythm: 마지막 on↔off 전환이 RHYTHM_TIMEOUT 이내 — 무한 홀드 차단
- * 5) settling = stable && hasRhythm → 충전
- *    불안정이 STABILITY_GRACE 초 넘으면 방전 (전환 transient는 흡수)
+ * emaSpeed는 raw 속도 slow EMA로 별도 추적 — 게이지가 가득 찰 때 myPace 값으로 쓴다.
  */
 export function stepAnchorGauge(
   state: AnchorGaugeState,
@@ -52,29 +35,69 @@ export function stepAnchorGauge(
   dt: number,
   c: AnchorConstants,
 ): AnchorGaugeState {
-  // 1–3. slow EMA / emaChange / emaDev
-  const alphaSlow = 1 - Math.exp(-dt / c.EMA_TAU);
-  const newEma    = state.stability.emaSpeed + alphaSlow * (speed - state.stability.emaSpeed);
-  const emaChange = Math.abs(newEma - state.stability.emaSpeed);
-  const alphaStab = 1 - Math.exp(-dt / c.STABILITY_TAU);
-  const newDev    = state.stability.emaDev + alphaStab * (emaChange - state.stability.emaDev);
-  const stable    = newDev < c.STABILITY_WINDOW;
+  // 평균 페이스(myPace 값) — raw 속도 slow EMA
+  const alphaSpeed = 1 - Math.exp(-dt / c.EMA_TAU);
+  const emaSpeed   = state.emaSpeed + alphaSpeed * (speed - state.emaSpeed);
 
-  // 4. 입력 전환 추적
-  const toggled         = holding !== state.prevHolding;
-  const timeSinceToggle = toggled ? 0 : state.timeSinceToggle + dt;
-  const hasRhythm       = timeSinceToggle < c.RHYTHM_TIMEOUT;
+  let {
+    progress, prevHolding, segmentTime,
+    emaHold, emaRelease, matchScore, scoredSegments, unstableTime,
+  } = state;
 
-  // 5. 비대칭 fill / 유예 후 drain
-  const settling = stable && hasRhythm;
-  const penalty  = edgePenalty(newEma, c);
+  segmentTime += dt;
 
-  let unstableTime = state.unstableTime;
-  let progress     = state.progress;
+  // ── 세그먼트 종료(토글) 처리 ───────────────────────────────────────────
+  let beatKick = 0; // 이번 프레임 즉각 가감량
+  if (holding !== prevHolding) {
+    const dur = segmentTime;
 
-  if (settling) {
+    // 채터(너무 짧음)·탐색 멈춤(너무 김)은 리듬에서 제외
+    if (dur >= c.RHYTHM_MIN_SEGMENT && dur <= c.RHYTHM_MAX_SEGMENT) {
+      // prevHolding=true면 방금 끝난 건 '누름' 세그먼트
+      const ema = prevHolding ? emaHold : emaRelease;
+
+      if (ema === 0) {
+        // 해당 타입 첫 관측 — seed만, 채점 없음(비교 대상이 없음)
+        if (prevHolding) emaHold = dur; else emaRelease = dur;
+      } else {
+        const relErr   = Math.abs(dur - ema) / ema;
+        const segMatch = clamp01(1 - relErr / c.RHYTHM_TOLERANCE);
+        const newEma   = ema + c.DURATION_ALPHA * (dur - ema);
+        if (prevHolding) emaHold = newEma; else emaRelease = newEma;
+
+        matchScore     += c.MATCH_ALPHA * (segMatch - matchScore);
+        scoredSegments += 1;
+        // 좋은 비트는 +, 어긋난 비트는 − (−0.5..+0.5 → ±BEAT_KICK)
+        beatKick = (segMatch - 0.5) * 2 * c.RHYTHM_BEAT_KICK;
+      }
+    }
+
+    segmentTime = 0;
+    prevHolding = holding;
+  }
+
+  // ── 멈춤 감지: 현재 세그먼트가 평소보다 과도하게 길면 일치도 급감 ──────────
+  const expected = holding ? emaHold : emaRelease;
+  const overrun  =
+    (expected > 0 && segmentTime > expected * c.RHYTHM_STUCK_FACTOR) ||
+    segmentTime > c.RHYTHM_MAX_SEGMENT;
+  if (overrun) {
+    matchScore = Math.max(0, matchScore - c.RHYTHM_STUCK_DECAY * dt);
+  }
+
+  // ── 게이지 갱신 ────────────────────────────────────────────────────────
+  // 1) 비트 즉각 가감 (연동감)
+  progress = Math.max(0, Math.min(c.ANCHOR_GAUGE_FULL, progress + beatKick));
+
+  // 2) 그루브 유지 시 연속 충전 / 아니면 유예 후 방전
+  const inGroove =
+    scoredSegments >= c.RHYTHM_WARMUP &&
+    matchScore >= c.RHYTHM_MATCH_THRESHOLD &&
+    !overrun;
+
+  if (inGroove) {
     unstableTime = 0;
-    progress = Math.min(c.ANCHOR_GAUGE_FULL, progress + c.ANCHOR_FILL_RATE * penalty * dt);
+    progress = Math.min(c.ANCHOR_GAUGE_FULL, progress + c.ANCHOR_FILL_RATE * dt);
   } else {
     unstableTime += dt;
     if (unstableTime > c.STABILITY_GRACE) {
@@ -83,11 +106,8 @@ export function stepAnchorGauge(
   }
 
   return {
-    progress,
-    stability:       { emaSpeed: newEma, emaDev: newDev },
-    unstableTime,
-    timeSinceToggle,
-    prevHolding:     holding,
+    progress, emaSpeed, prevHolding, segmentTime,
+    emaHold, emaRelease, matchScore, scoredSegments, unstableTime,
   };
 }
 

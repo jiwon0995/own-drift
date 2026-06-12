@@ -38,11 +38,15 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   // 안착 게이지 — FindPaceScreen 마운트 시 resetAnchor로 재초기화
   const anchorRef = useRef<AnchorGaugeState>({
-    progress:        0,
-    stability:       { emaSpeed: c.START_SPEED, emaDev: 0 },
-    unstableTime:    0,
-    timeSinceToggle: 0,
-    prevHolding:     false,
+    progress:       0,
+    emaSpeed:       c.START_SPEED,
+    prevHolding:    false,
+    segmentTime:    0,
+    emaHold:        0,
+    emaRelease:     0,
+    matchScore:     0,
+    scoredSegments: 0,
+    unstableTime:   0,
   });
 
   // constants ref — ambientRef 패턴과 동일. 매 렌더마다 갱신해
@@ -91,7 +95,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
         phase:         phaseRef.current,
         holding:       holdingRef.current,
         gaugeProgress: anchorRef.current.progress,
-        emaSpeed:      anchorRef.current.stability.emaSpeed,
+        emaSpeed:      anchorRef.current.emaSpeed,
       });
     }
 
@@ -118,11 +122,15 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   const resetAnchor = useCallback(() => {
     anchorRef.current = {
-      progress:        0,
-      stability:       { emaSpeed: speedRef.current, emaDev: 0 },
-      unstableTime:    0,
-      timeSinceToggle: 0,
-      prevHolding:     false,
+      progress:       0,
+      emaSpeed:       speedRef.current,
+      prevHolding:    holdingRef.current,
+      segmentTime:    0,
+      emaHold:        0,
+      emaRelease:     0,
+      matchScore:     0,
+      scoredSegments: 0,
+      unstableTime:   0,
     };
     setSnapshot(s => ({ ...s, gaugeProgress: 0, emaSpeed: speedRef.current }));
   }, []);

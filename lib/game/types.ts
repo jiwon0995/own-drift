@@ -28,33 +28,40 @@ export interface LoopSnapshot {
 
 // ── 안착 게이지 내부 상태 (ref, rAF 루프) ──────────────────────────────
 
-/** 속도 EMA 추적 상태 */
-export interface StabilityState {
-  emaSpeed: number;  // 속도 지수이동평균
-  emaDev:   number;  // |speed - ema| 지수이동평균 (변동폭 추적)
-}
-
-/** 안착 게이지 전체 상태 */
+/**
+ * 안착 게이지 전체 상태 — 입력 리듬(누름/뗌 지속시간의 반복성)을 추적한다.
+ *
+ * "내 속도 = 내가 반복할 수 있는 on/off 리듬." 같은 패턴을 반복할수록 충전.
+ */
 export interface AnchorGaugeState {
-  progress:        number;         // 충전량 0..ANCHOR_GAUGE_FULL
-  stability:       StabilityState;
-  unstableTime:    number;         // 불안정 지속 시간 (grace 판정용)
-  timeSinceToggle: number;         // 마지막 on↔off 전환 후 경과 시간
-  prevHolding:     boolean;        // 직전 프레임 holding (전환 감지용)
+  progress:       number;   // 충전량 0..ANCHOR_GAUGE_FULL
+  emaSpeed:       number;   // raw 속도 slow EMA — myPace 값 산출용
+
+  prevHolding:    boolean;  // 직전 프레임 holding (전환 감지)
+  segmentTime:    number;   // 현재 누름/뗌 세그먼트 경과 시간
+  emaHold:        number;   // 평소 누름 지속시간 (0 = 미관측)
+  emaRelease:     number;   // 평소 뗌 지속시간 (0 = 미관측)
+  matchScore:     number;   // 0..1 최근 비트들의 리듬 일치도
+  scoredSegments: number;   // 채점된 세그먼트 수 (warmup gate)
+  unstableTime:   number;   // 저조 일치 지속 시간 (grace 판정)
 }
 
 export interface AnchorConstants {
-  ANCHOR_FILL_RATE:  number;
-  ANCHOR_DRAIN_RATE: number;
-  ANCHOR_GAUGE_FULL: number;
-  STABILITY_WINDOW:  number;
-  EMA_TAU:           number;
-  STABILITY_TAU:     number;
-  EXTREME_EDGE:      number;
-  MIN_SPEED:         number;
-  MAX_SPEED:         number;
-  STABILITY_GRACE:   number;
-  RHYTHM_TIMEOUT:    number;
+  ANCHOR_FILL_RATE:       number;
+  ANCHOR_DRAIN_RATE:      number;
+  ANCHOR_GAUGE_FULL:      number;
+  EMA_TAU:                number;
+  RHYTHM_BEAT_KICK:       number;
+  RHYTHM_TOLERANCE:       number;
+  RHYTHM_MATCH_THRESHOLD: number;
+  RHYTHM_STUCK_FACTOR:    number;
+  RHYTHM_STUCK_DECAY:     number;
+  RHYTHM_MAX_SEGMENT:     number;
+  RHYTHM_MIN_SEGMENT:     number;
+  RHYTHM_WARMUP:          number;
+  DURATION_ALPHA:         number;
+  MATCH_ALPHA:            number;
+  STABILITY_GRACE:        number;
 }
 
 // ── 내 속도 / 구간 ────────────────────────────────────────────────────
