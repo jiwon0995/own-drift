@@ -37,6 +37,13 @@ function frameInterval(speed: number): number {
   return Math.round(400 - t * 320); // 400ms(느림) ~ 80ms(빠름)
 }
 
+/**
+ * 프레임별 Y 바운스 오프셋 테이블 (로컬 px, 정수).
+ * 발 딛는 프레임(0,2) = +1(아래), 패싱 프레임(1,3) = -1(위).
+ * RUNNER_BOUNCE_PX를 곱해 실제 진폭 결정.
+ */
+const BOUNCE_Y_TABLE = [1, -1, 1, -1] as const;
+
 interface PixelRunnerProps {
   speed:   number;
   paused?: boolean;
@@ -70,6 +77,11 @@ export default function PixelRunner({ speed, paused = false }: PixelRunnerProps)
   }, [paused, reducedMotion]);
 
   const shadow = buildShadow(RUN[frame], '#ffb257');
+  // 기존 프레임 index에서 bounce 파생 — 새 타이머/rAF 없음.
+  // reduced-motion 또는 paused 시 0으로 고정.
+  const bounceY = (paused || reducedMotion)
+    ? 0
+    : BOUNCE_Y_TABLE[frame] * GAME_CONSTANTS.RUNNER_BOUNCE_PX;
 
   return (
     /* 스프라이트 bounding box: 5col × 5row × U px */
@@ -81,14 +93,17 @@ export default function PixelRunner({ speed, paused = false }: PixelRunnerProps)
         imageRendering: 'pixelated',
       }}
     >
-      <i
-        style={{
-          position:   'absolute',
-          width:      U,
-          height:     U,
-          boxShadow:  shadow,
-        }}
-      />
+      {/* bounce wrapper — 위치용 transform과 분리해 내부에서만 적용 */}
+      <div style={{ transform: `translateY(${bounceY}px)` }}>
+        <i
+          style={{
+            position:   'absolute',
+            width:      U,
+            height:     U,
+            boxShadow:  shadow,
+          }}
+        />
+      </div>
     </div>
   );
 }

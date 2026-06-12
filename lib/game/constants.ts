@@ -53,6 +53,13 @@ export const GAME_CONSTANTS = {
 
   /** done 문구 노출 후 FindPace로 자동 전진하는 지연(ms). */
   TUTORIAL_DONE_DELAY_MS: 2500,
+
+  /**
+   * 러너 상하 바운스 진폭 (스프라이트 로컬 px).
+   * GameStage에서 scale(3) 적용되므로 1px = 화면 3px.
+   * 높이면 강한 까딱, 낮추면 미세한 진동.
+   */
+  RUNNER_BOUNCE_PX: 1,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
