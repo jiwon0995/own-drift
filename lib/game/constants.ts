@@ -41,6 +41,18 @@ export const GAME_CONSTANTS = {
    * Spacebar 입력 없이 고정. MIN_SPEED보다 살짝 높아 배경이 은근히 흐른다.
    */
   TITLE_AMBIENT_SPEED: 0.45,
+
+  /** Tutorial fast 스텝: 이 시간(초) 동안 홀드하면 slow로 전환. */
+  TUTORIAL_FAST_HOLD_SEC: 1.5,
+
+  /** Tutorial slow 스텝: 이 시간(초) 동안 릴리스(비홀드) 상태면 done으로 전환. */
+  TUTORIAL_SLOW_RELEASE_SEC: 1.5,
+
+  /** 튜토리얼 스텝당 폴백 타임아웃(초). 조작 없어도 이 시간 후 자동 진행. */
+  TUTORIAL_FALLBACK_SEC: 9,
+
+  /** done 문구 노출 후 FindPace로 자동 전진하는 지연(ms). */
+  TUTORIAL_DONE_DELAY_MS: 2500,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;

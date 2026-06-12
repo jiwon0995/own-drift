@@ -45,8 +45,9 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   // ── UI 스냅샷 (스로틀, ~UI_THROTTLE_MS 간격) ──────────────────────
   const [snapshot, setSnapshot] = useState<LoopSnapshot>({
-    speed: c.START_SPEED,
-    phase: GamePhase.Idle,
+    speed:   c.START_SPEED,
+    phase:   GamePhase.Idle,
+    holding: false,
   });
 
   // ── rAF 루프 ──────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     // 스로틀 스냅샷 — UI/디버그 HUD 갱신
     if (timestamp - lastSnapshotRef.current >= c.UI_THROTTLE_MS) {
       lastSnapshotRef.current = timestamp;
-      setSnapshot({ speed: speedRef.current, phase: phaseRef.current });
+      setSnapshot({ speed: speedRef.current, phase: phaseRef.current, holding: holdingRef.current });
     }
 
     rafIdRef.current = requestAnimationFrame(tick);

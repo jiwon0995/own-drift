@@ -19,6 +19,7 @@ export interface LoopState {
 
 /** useGameLoop 반환: UI 표시용 스로틀 스냅샷 */
 export interface LoopSnapshot {
-  speed:  Speed;
-  phase:  GamePhase;
+  speed:   Speed;
+  phase:   GamePhase;
+  holding: boolean;
 }

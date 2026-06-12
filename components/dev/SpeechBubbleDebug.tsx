@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import SpeechBubble from '@/components/game/SpeechBubble';
-import { SCREEN_COPY } from '@/lib/content/copy';
+import { SCREEN_COPY, TUTORIAL_STEP_COPY } from '@/lib/content/copy';
 
 const SAMPLES = [
   SCREEN_COPY.title.bubble,
-  SCREEN_COPY.tutorial.bubble,
+  TUTORIAL_STEP_COPY.fast.bubble,
+  TUTORIAL_STEP_COPY.slow.bubble,
+  TUTORIAL_STEP_COPY.done.bubble,
   SCREEN_COPY.findPace.bubble,
 ];
 
