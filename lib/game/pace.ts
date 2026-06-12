@@ -6,20 +6,7 @@
  * isInBand        : 히스테리시스 적용 구간 판정
  */
 
-import type { AnchorGaugeState, Band, HysteresisState } from './types';
-
-// ── 상수 인터페이스 ────────────────────────────────────────────────────
-
-export interface AnchorConstants {
-  ANCHOR_FILL_RATE:  number;
-  ANCHOR_DRAIN_RATE: number;
-  ANCHOR_GAUGE_FULL: number;
-  STABILITY_WINDOW:  number;
-  EMA_TAU:           number;
-  EXTREME_EDGE:      number;
-  MIN_SPEED:         number;
-  MAX_SPEED:         number;
-}
+import type { AnchorConstants, AnchorGaugeState, Band, HysteresisState } from './types';
 
 // ── 내부 헬퍼 ──────────────────────────────────────────────────────────
 
@@ -46,29 +33,61 @@ function edgePenalty(speed: number, c: AnchorConstants): number {
  * EMA 추적으로 변동폭(emaDev)을 산출하고, STABILITY_WINDOW 이하면 안착 중으로 판정.
  * 극단 속도에서 살짝 패널티, 불안정 시 방전.
  */
+/**
+ * 안착 게이지 1프레임 진행.
+ *
+ * "일정한 on/off 리듬이 있으면 충전, 무한 홀드는 RHYTHM_TIMEOUT 후 정지."
+ *
+ * 1) slow EMA (TAU=3s): 여러 on/off 사이클을 평균내어 "평균 페이스" 추적
+ * 2) emaChange = |newEma - oldEma|: slow EMA 변화율
+ * 3) emaDev = EMA(emaChange, STABILITY_TAU): 변화율이 잔잔한지 (stable 판정)
+ * 4) hasRhythm: 마지막 on↔off 전환이 RHYTHM_TIMEOUT 이내 — 무한 홀드 차단
+ * 5) settling = stable && hasRhythm → 충전
+ *    불안정이 STABILITY_GRACE 초 넘으면 방전 (전환 transient는 흡수)
+ */
 export function stepAnchorGauge(
   state: AnchorGaugeState,
   speed: number,
+  holding: boolean,
   dt: number,
   c: AnchorConstants,
 ): AnchorGaugeState {
-  // 지수이동평균 갱신: alpha ≈ dt/tau (exp 근사)
-  const alpha  = 1 - Math.exp(-dt / c.EMA_TAU);
-  const newEma = state.stability.emaSpeed + alpha * (speed - state.stability.emaSpeed);
-  const dev    = Math.abs(speed - state.stability.emaSpeed);
-  const newDev = state.stability.emaDev   + alpha * (dev   - state.stability.emaDev);
+  // 1–3. slow EMA / emaChange / emaDev
+  const alphaSlow = 1 - Math.exp(-dt / c.EMA_TAU);
+  const newEma    = state.stability.emaSpeed + alphaSlow * (speed - state.stability.emaSpeed);
+  const emaChange = Math.abs(newEma - state.stability.emaSpeed);
+  const alphaStab = 1 - Math.exp(-dt / c.STABILITY_TAU);
+  const newDev    = state.stability.emaDev + alphaStab * (emaChange - state.stability.emaDev);
+  const stable    = newDev < c.STABILITY_WINDOW;
 
-  const stable  = newDev < c.STABILITY_WINDOW;
-  const penalty = edgePenalty(speed, c);
+  // 4. 입력 전환 추적
+  const toggled         = holding !== state.prevHolding;
+  const timeSinceToggle = toggled ? 0 : state.timeSinceToggle + dt;
+  const hasRhythm       = timeSinceToggle < c.RHYTHM_TIMEOUT;
 
-  const delta      = stable
-    ? c.ANCHOR_FILL_RATE * penalty * dt
-    : -c.ANCHOR_DRAIN_RATE * dt;
-  const newProgress = Math.max(0, Math.min(c.ANCHOR_GAUGE_FULL, state.progress + delta));
+  // 5. 비대칭 fill / 유예 후 drain
+  const settling = stable && hasRhythm;
+  const penalty  = edgePenalty(newEma, c);
+
+  let unstableTime = state.unstableTime;
+  let progress     = state.progress;
+
+  if (settling) {
+    unstableTime = 0;
+    progress = Math.min(c.ANCHOR_GAUGE_FULL, progress + c.ANCHOR_FILL_RATE * penalty * dt);
+  } else {
+    unstableTime += dt;
+    if (unstableTime > c.STABILITY_GRACE) {
+      progress = Math.max(0, progress - c.ANCHOR_DRAIN_RATE * dt);
+    }
+  }
 
   return {
-    progress:  newProgress,
-    stability: { emaSpeed: newEma, emaDev: newDev },
+    progress,
+    stability:       { emaSpeed: newEma, emaDev: newDev },
+    unstableTime,
+    timeSinceToggle,
+    prevHolding:     holding,
   };
 }
 

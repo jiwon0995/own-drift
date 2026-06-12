@@ -23,6 +23,7 @@ export interface LoopSnapshot {
   phase:         GamePhase;
   holding:       boolean;
   gaugeProgress: number;   // 안착 게이지 0..ANCHOR_GAUGE_FULL
+  emaSpeed:      number;   // slow EMA 속도 — myPace 확정 시 사용
 }
 
 // ── 안착 게이지 내부 상태 (ref, rAF 루프) ──────────────────────────────
@@ -35,8 +36,25 @@ export interface StabilityState {
 
 /** 안착 게이지 전체 상태 */
 export interface AnchorGaugeState {
-  progress:  number;         // 충전량 0..ANCHOR_GAUGE_FULL
-  stability: StabilityState;
+  progress:        number;         // 충전량 0..ANCHOR_GAUGE_FULL
+  stability:       StabilityState;
+  unstableTime:    number;         // 불안정 지속 시간 (grace 판정용)
+  timeSinceToggle: number;         // 마지막 on↔off 전환 후 경과 시간
+  prevHolding:     boolean;        // 직전 프레임 holding (전환 감지용)
+}
+
+export interface AnchorConstants {
+  ANCHOR_FILL_RATE:  number;
+  ANCHOR_DRAIN_RATE: number;
+  ANCHOR_GAUGE_FULL: number;
+  STABILITY_WINDOW:  number;
+  EMA_TAU:           number;
+  STABILITY_TAU:     number;
+  EXTREME_EDGE:      number;
+  MIN_SPEED:         number;
+  MAX_SPEED:         number;
+  STABILITY_GRACE:   number;
+  RHYTHM_TIMEOUT:    number;
 }
 
 // ── 내 속도 / 구간 ────────────────────────────────────────────────────

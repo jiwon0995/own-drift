@@ -38,8 +38,11 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   // 안착 게이지 — FindPaceScreen 마운트 시 resetAnchor로 재초기화
   const anchorRef = useRef<AnchorGaugeState>({
-    progress:  0,
-    stability: { emaSpeed: c.START_SPEED, emaDev: 0.5 },
+    progress:        0,
+    stability:       { emaSpeed: c.START_SPEED, emaDev: 0 },
+    unstableTime:    0,
+    timeSinceToggle: 0,
+    prevHolding:     false,
   });
 
   // constants ref — ambientRef 패턴과 동일. 매 렌더마다 갱신해
@@ -53,6 +56,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     phase:         GamePhase.Idle,
     holding:       false,
     gaugeProgress: 0,
+    emaSpeed:      c.START_SPEED,
   });
 
   // ── rAF 루프 ──────────────────────────────────────────────────────
@@ -78,7 +82,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     }
 
     // 안착 게이지 매 프레임 계산
-    anchorRef.current = stepAnchorGauge(anchorRef.current, speedRef.current, dt, cc);
+    anchorRef.current = stepAnchorGauge(anchorRef.current, speedRef.current, holdingRef.current, dt, cc);
 
     if (timestamp - lastSnapshotRef.current >= cc.UI_THROTTLE_MS) {
       lastSnapshotRef.current = timestamp;
@@ -87,6 +91,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
         phase:         phaseRef.current,
         holding:       holdingRef.current,
         gaugeProgress: anchorRef.current.progress,
+        emaSpeed:      anchorRef.current.stability.emaSpeed,
       });
     }
 
@@ -113,10 +118,13 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
   const resetAnchor = useCallback(() => {
     anchorRef.current = {
-      progress:  0,
-      stability: { emaSpeed: speedRef.current, emaDev: 0.5 },
+      progress:        0,
+      stability:       { emaSpeed: speedRef.current, emaDev: 0 },
+      unstableTime:    0,
+      timeSinceToggle: 0,
+      prevHolding:     false,
     };
-    setSnapshot(s => ({ ...s, gaugeProgress: 0 }));
+    setSnapshot(s => ({ ...s, gaugeProgress: 0, emaSpeed: speedRef.current }));
   }, []);
 
   useEffect(() => {

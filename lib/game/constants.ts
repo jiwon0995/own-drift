@@ -65,20 +65,38 @@ export const GAME_CONSTANTS = {
   /** 안착 중 게이지 충전 속도 (단위/s). ANCHOR_GAUGE_FULL / 이 값 = 가득 채우는 시간. */
   ANCHOR_FILL_RATE: 0.35,
 
-  /** 불안정 시 게이지 방전 속도 (단위/s). */
-  ANCHOR_DRAIN_RATE: 0.5,
+  /** 불안정 시 게이지 방전 속도 (단위/s). fill보다 낮게 — on/off 리듬이 손해를 안 보게. */
+  ANCHOR_DRAIN_RATE: 0.18,
+
+  /** 불안정이 이 시간(초) 넘게 지속돼야 방전 시작. on/off 전환 transient 흡수용. */
+  STABILITY_GRACE: 0.6,
+
+  /** 마지막 on↔off 전환 후 이 시간(초) 넘게 정적이면 '리듬 아님'으로 보고 충전 정지. */
+  RHYTHM_TIMEOUT: 1.8,
 
   /** 게이지 최대치. 이 값에 도달하면 myPace 확정. */
   ANCHOR_GAUGE_FULL: 1.0,
 
   /**
-   * 안착 민감도 — emaDev 이 값 이하면 "안착 중".
-   * 높이면 느슨하게(쉽게 안착), 낮추면 엄격하게.
+   * 안정성 임계값 — slow EMA 변화율(emaChange의 EMA)이 이 값 이하면 "안착 중".
+   * slow EMA 최대 변화율 ≈ alpha_slow * MAX_RANGE ≈ 0.0055 * 2.2 ≈ 0.012.
+   * 0.004 = 일정 리듬 유지 시 자연스럽게 도달하는 수준.
    */
-  STABILITY_WINDOW: 0.08,
+  STABILITY_WINDOW: 0.004,
 
-  /** 속도 EMA 시상수 (초). 클수록 느리게 추적. */
-  EMA_TAU: 0.4,
+  /**
+   * 속도 slow EMA 시상수 (초).
+   * 여러 on/off 사이클을 평균내어 리듬의 "평균 속도"를 추적.
+   * 크게 설정해야 개별 스페이스 입력에 덜 흔들린다.
+   */
+  EMA_TAU: 3.0,
+
+  /**
+   * 안정성 감지 EMA 시상수 (초).
+   * slow EMA의 변화율(emaChange)을 추적하는 2차 EMA.
+   * 작을수록 빠르게 반응 — 리듬이 자리잡히면 빠르게 stable 판정.
+   */
+  STABILITY_TAU: 0.8,
 
   /** myPace 기준 band 허용 범위 (±비율). 0.15 = ±15%. */
   TOLERANCE: 0.15,
