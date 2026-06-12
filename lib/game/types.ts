@@ -19,11 +19,13 @@ export interface LoopState {
 
 /** useGameLoop 반환: UI 표시용 스로틀 스냅샷 */
 export interface LoopSnapshot {
-  speed:         Speed;
-  phase:         GamePhase;
-  holding:       boolean;
-  gaugeProgress: number;   // 안착 게이지 0..ANCHOR_GAUGE_FULL
-  emaSpeed:      number;   // slow EMA 속도 — myPace 확정 시 사용
+  speed:             Speed;
+  phase:             GamePhase;
+  holding:           boolean;
+  gaugeProgress:     number;   // 안착 게이지 0..ANCHOR_GAUGE_FULL (Find Pace)
+  emaSpeed:          number;   // slow EMA 속도 — myPace 확정 시 사용
+  stabilityProgress: number;   // 안정 게이지 0..STABILITY_GAUGE_FULL (Main Play)
+  inBand:            boolean;  // 현재 속도가 내 구간 안인지 (히스테리시스 적용)
 }
 
 // ── 안착 게이지 내부 상태 (ref, rAF 루프) ──────────────────────────────
@@ -62,6 +64,13 @@ export interface AnchorConstants {
   DURATION_ALPHA:         number;
   MATCH_ALPHA:            number;
   STABILITY_GRACE:        number;
+}
+
+/** stepStabilityGauge 튜닝값 — 구조적 부분 집합 */
+export interface StabilityConstants {
+  STABILITY_FILL_RATE:   number;
+  STABILITY_REVERT_RATE: number;
+  STABILITY_GAUGE_FULL:  number;
 }
 
 // ── 내 속도 / 구간 ────────────────────────────────────────────────────

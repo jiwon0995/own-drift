@@ -25,9 +25,25 @@ export const TUTORIAL_STEP_COPY: Record<TutorialStep, { bubble: string }> = {
   },
 };
 
-/** FindPace 안착 게이지 라벨 */
+/** 게이지 라벨 — Find Pace(안착) / Main Play(안정) */
 export const GAUGE_COPY = {
-  anchoring: '머무는 중…',
+  anchoring:  '머무는 중…',   // Find Pace 안착 게이지
+  stabilizing: '이어가는 중…', // Main Play 안정 게이지
+} as const;
+
+/**
+ * Main Play 문구 (docs/03-screens.md 1.4 / 1.7).
+ * - entry: 진입 시 한 번
+ * - 상태 4종: 구간 안(재진입/지속) · 이탈 · 멈춤. 경계 깜빡임은 디바운스로 방지.
+ */
+export const MAIN_PLAY_COPY = {
+  entry: '내 속도대로..',
+  status: {
+    inEnter: '리듬이 돌아오고 있어요.',           // 구간 재진입
+    inHold:  '리듬이 이어지는 중…',               // 구간 안 지속(충전)
+    drift:   '조금 멀어졌어요. 다시 찾으면 됩니다.', // 막 이탈
+    stopped: '잠시 멈췄어요. 다시 돌아오면 이어집니다.', // 이탈 지속
+  },
 } as const;
 
 /**

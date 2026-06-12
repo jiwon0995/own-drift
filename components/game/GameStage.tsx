@@ -7,12 +7,13 @@
 
 import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { useGameLoop }    from '@/hooks/useGameLoop';
-import type { LoopSnapshot } from '@/lib/game/types';
+import type { LoopSnapshot, Band } from '@/lib/game/types';
 import PixelRunner        from './PixelRunner';
 
 interface GameStageContextValue {
-  snapshot:    LoopSnapshot;
-  resetAnchor: () => void;
+  snapshot:       LoopSnapshot;
+  resetAnchor:    () => void;
+  resetStability: () => void;
 }
 
 const GameStageContext = createContext<GameStageContextValue | null>(null);
@@ -24,24 +25,30 @@ export function useGameStage(): GameStageContextValue {
 }
 
 interface GameStageProps {
-  ambient?:  boolean;
-  children?: ReactNode;
+  ambient?:      boolean;
+  /** 확정된 내 구간 — Main Play에서 안정 게이지 계산용. */
+  band?:         Band | null;
+  /** 안정 게이지 가득 이벤트 (2C·Phase 3 소비). */
+  onStabilized?: () => void;
+  children?:     ReactNode;
 }
 
 const reducedMotion =
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function GameStage({ ambient = false, children }: GameStageProps) {
+export default function GameStage({ ambient = false, band = null, onStabilized, children }: GameStageProps) {
   const groundRef = useRef<HTMLDivElement>(null);
 
-  const { snapshot, resetAnchor } = useGameLoop({
+  const { snapshot, resetAnchor, resetStability } = useGameLoop({
     bgRef:   reducedMotion ? undefined : groundRef,
     ambient,
+    band,
+    onStabilized,
   });
 
   return (
-    <GameStageContext.Provider value={{ snapshot, resetAnchor }}>
+    <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability }}>
       <div className="relative w-full h-full overflow-hidden">
 
         <div

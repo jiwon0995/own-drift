@@ -132,6 +132,23 @@ export const GAME_CONSTANTS = {
 
   /** 힌트 최소 유지 시간(ms) — 읽을 시간 확보 + 깜빡임 방지(차분한 톤). */
   FINDPACE_HINT_HOLD_MS: 4500,
+
+  // ── Phase 2B: 안정 게이지 (Main Play) ──────────────────────────────
+
+  /** 내 구간(myPace±tol) 안에 있을 때 안정 게이지 충전 속도 (단위/s). FULL/이 값 = 채우는 시간. */
+  STABILITY_FILL_RATE: 0.2,
+
+  /**
+   * 구간 이탈 시 되돌림 속도 (단위/s). 0 = 순수 멈춤(되돌림 없음).
+   * 아주 작게 둬 "살짝 되돌림" — 0으로 clamp되어 음수·실패는 절대 없음.
+   */
+  STABILITY_REVERT_RATE: 0.05,
+
+  /** 안정 게이지 최대치. 도달하면 onStabilized 발생 + 리셋. */
+  STABILITY_GAUGE_FULL: 1.0,
+
+  /** 상태 문구 최소 유지 시간(ms) — 경계에서 톡톡 바뀌어 재타이핑되는 깜빡임 방지. */
+  STATUS_DEBOUNCE_MS: 2500,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;

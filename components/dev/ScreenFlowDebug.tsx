@@ -43,7 +43,7 @@ export default function ScreenFlowDebug() {
         className="flex-1 border"
         style={{ borderColor: '#3a2a22', minHeight: 120 }}
       >
-        <ScreenRouter screen={screen} onAdvance={advance} paceState={null} onPaceSet={() => {}} />
+        <ScreenRouter screen={screen} onAdvance={advance} paceState={null} onPaceSet={() => {}} onStabilized={() => {}} />
       </div>
 
       <div className="font-pixel text-note text-ink-faint">

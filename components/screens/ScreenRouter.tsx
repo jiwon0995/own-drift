@@ -8,10 +8,11 @@ import FindPaceScreen  from './FindPaceScreen';
 import MainPlayScreen  from './MainPlayScreen';
 
 interface ScreenRouterProps {
-  screen:     Screen;
-  onAdvance:  () => void;
-  paceState:  PaceState | null;
-  onPaceSet:  (pace: PaceState) => void;
+  screen:        Screen;
+  onAdvance:     () => void;
+  paceState:     PaceState | null;
+  onPaceSet:     (pace: PaceState) => void;
+  onStabilized:  () => void;
 }
 
 export default function ScreenRouter({
@@ -19,15 +20,20 @@ export default function ScreenRouter({
   onAdvance,
   paceState,
   onPaceSet,
+  onStabilized,
 }: ScreenRouterProps) {
   const isAmbient = screen === 'title';
 
   return (
-    <GameStage ambient={isAmbient}>
+    <GameStage
+      ambient={isAmbient}
+      band={paceState?.band ?? null}
+      onStabilized={onStabilized}
+    >
       {screen === 'title'    && <TitleScreen    onAdvance={onAdvance} />}
       {screen === 'tutorial' && <TutorialScreen onAdvance={onAdvance} />}
       {screen === 'findPace' && <FindPaceScreen onPaceSet={onPaceSet} />}
-      {screen === 'mainPlay' && <MainPlayScreen paceState={paceState} />}
+      {screen === 'mainPlay' && <MainPlayScreen />}
     </GameStage>
   );
 }

@@ -6,7 +6,9 @@
  * isInBand        : 히스테리시스 적용 구간 판정
  */
 
-import type { AnchorConstants, AnchorGaugeState, Band, HysteresisState } from './types';
+import type {
+  AnchorConstants, AnchorGaugeState, Band, HysteresisState, StabilityConstants,
+} from './types';
 
 // ── 내부 헬퍼 ──────────────────────────────────────────────────────────
 
@@ -150,4 +152,24 @@ export function isInBand(
       : speed >= (band.lo + band.hi) / 2 - 0.001 && speed <= (band.lo + band.hi) / 2 + 0.001;
   }
   return { inBand };
+}
+
+/**
+ * 안정 게이지 1프레임 진행 (Phase 2B).
+ *
+ * 내 구간 안(inBand)이면 충전, 벗어나면 멈춤 또는 아주 살짝 되돌림.
+ * REVERT_RATE=0이면 순수 멈춤. [0, FULL]로 clamp — **음수·실패 절대 없음.**
+ *
+ * 순수 함수: full 도달 감지/리셋/onStabilized는 호출부(루프)가 처리한다.
+ */
+export function stepStabilityGauge(
+  progress: number,
+  inBand: boolean,
+  dt: number,
+  c: StabilityConstants,
+): number {
+  const next = inBand
+    ? progress + c.STABILITY_FILL_RATE * dt
+    : progress - c.STABILITY_REVERT_RATE * dt;
+  return Math.max(0, Math.min(c.STABILITY_GAUGE_FULL, next));
 }
