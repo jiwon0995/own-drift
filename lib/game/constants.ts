@@ -57,9 +57,40 @@ export const GAME_CONSTANTS = {
   /**
    * 러너 상하 바운스 진폭 (스프라이트 로컬 px).
    * GameStage에서 scale(3) 적용되므로 1px = 화면 3px.
-   * 높이면 강한 까딱, 낮추면 미세한 진동.
    */
   RUNNER_BOUNCE_PX: 1,
+
+  // ── Phase 2A: Find Pace 안착 게이지 ────────────────────────────────
+
+  /** 안착 중 게이지 충전 속도 (단위/s). ANCHOR_GAUGE_FULL / 이 값 = 가득 채우는 시간. */
+  ANCHOR_FILL_RATE: 0.35,
+
+  /** 불안정 시 게이지 방전 속도 (단위/s). */
+  ANCHOR_DRAIN_RATE: 0.5,
+
+  /** 게이지 최대치. 이 값에 도달하면 myPace 확정. */
+  ANCHOR_GAUGE_FULL: 1.0,
+
+  /**
+   * 안착 민감도 — emaDev 이 값 이하면 "안착 중".
+   * 높이면 느슨하게(쉽게 안착), 낮추면 엄격하게.
+   */
+  STABILITY_WINDOW: 0.08,
+
+  /** 속도 EMA 시상수 (초). 클수록 느리게 추적. */
+  EMA_TAU: 0.4,
+
+  /** myPace 기준 band 허용 범위 (±비율). 0.15 = ±15%. */
+  TOLERANCE: 0.15,
+
+  /** isInBand 히스테리시스 마진. enter/exit 임계 분리에 사용. */
+  HYSTERESIS_MARGIN: 0.02,
+
+  /**
+   * 극단 속도 패널티 구간 — MIN/MAX로부터 이 비율 이내면 충전 속도 감소.
+   * 0.15 = 속도 범위의 양 끝 15%에서 살짝 더디게.
+   */
+  EXTREME_EDGE: 0.15,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
