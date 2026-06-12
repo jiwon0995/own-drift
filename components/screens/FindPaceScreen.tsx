@@ -25,15 +25,13 @@ const {
   ANCHOR_GAUGE_FULL,
   TOLERANCE,
   FINDPACE_HINT_IDLE_SEC,
-  FINDPACE_HINT_STAGE1_SEC,
-  FINDPACE_HINT_STAGE2_SEC,
-  FINDPACE_HINT_STAGE3_SEC,
+  FINDPACE_HINT_HOWTO_START_SEC,
+  FINDPACE_HINT_HOWTO_INTERVAL_SEC,
   FINDPACE_HINT_PROGRESS_GATE,
   FINDPACE_HINT_HOLD_MS,
 } = GAME_CONSTANTS;
 
 const DEFAULT_HINT = { id: 'default', text: SCREEN_COPY.findPace.bubble };
-const HOWTO_AT = [FINDPACE_HINT_STAGE1_SEC, FINDPACE_HINT_STAGE2_SEC, FINDPACE_HINT_STAGE3_SEC];
 
 interface Hint { id: string; text: string }
 
@@ -110,17 +108,19 @@ export default function FindPaceScreen({ onPaceSet }: FindPaceScreenProps) {
       target = snapshot.holding
         ? { id: 'held', text: FIND_PACE_HINTS.held }
         : { id: 'idle', text: FIND_PACE_HINTS.idle };
-    } else if (gp < FINDPACE_HINT_PROGRESS_GATE) {
-      // 시도 중인데 게이지가 거의 안 참 → 단계별 how-to
-      if      (el >= HOWTO_AT[2]) target = { id: 'howto2', text: FIND_PACE_HINTS.howto[2] };
-      else if (el >= HOWTO_AT[1]) target = { id: 'howto1', text: FIND_PACE_HINTS.howto[1] };
-      else if (el >= HOWTO_AT[0]) target = { id: 'howto0', text: FIND_PACE_HINTS.howto[0] };
+    } else if (gp < FINDPACE_HINT_PROGRESS_GATE && el >= FINDPACE_HINT_HOWTO_START_SEC) {
+      // 시도 중인데 게이지가 거의 안 참 → 일정 간격으로 how-to 메시지 순환
+      const k   = Math.floor((el - FINDPACE_HINT_HOWTO_START_SEC) / FINDPACE_HINT_HOWTO_INTERVAL_SEC);
+      const idx = Math.min(k, FIND_PACE_HINTS.howto.length - 1);
+      target = { id: `howto${idx}`, text: FIND_PACE_HINTS.howto[idx] };
     }
 
-    // 차분한 톤 — 최소 유지 시간 지난 뒤에만 교체
+    // 차분한 톤 — 최소 유지 시간 지난 뒤에만 교체.
+    // 단, idle/held는 "지금 이 행동" 신호라 즉시 전환(읽던 how-to를 덮어씀).
     setHint(prev => {
       if (target.id === prev.id) return prev;
-      if (now - committedAtRef.current < FINDPACE_HINT_HOLD_MS) return prev;
+      const intoNudge = target.id === 'idle' || target.id === 'held';
+      if (!intoNudge && now - committedAtRef.current < FINDPACE_HINT_HOLD_MS) return prev;
       committedAtRef.current = now;
       return target;
     });

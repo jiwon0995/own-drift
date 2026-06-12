@@ -118,23 +118,20 @@ export const GAME_CONSTANTS = {
 
   // ── Find Pace 유도 힌트 타이밍 ─────────────────────────────────────
 
-  /** 입력 전환 없이 이 시간(초) 지나면 idle/held 힌트 노출 (RHYTHM_MAX_SEGMENT와 정렬). */
-  FINDPACE_HINT_IDLE_SEC: 4.0,
+  /** 입력 전환 없이 이 시간(초) 지나면 idle/held 힌트 노출. */
+  FINDPACE_HINT_IDLE_SEC: 8.0,
 
-  /** how-to 힌트 1단계 노출 시점 (화면 진입 후 누적 초). */
-  FINDPACE_HINT_STAGE1_SEC: 7,
+  /** how-to 힌트 첫 노출 시점 (화면 진입 후 누적 초). idle/held(8s)보다 늦게 둬 충돌 방지. */
+  FINDPACE_HINT_HOWTO_START_SEC: 10,
 
-  /** how-to 힌트 2단계 노출 시점 (초). */
-  FINDPACE_HINT_STAGE2_SEC: 14,
-
-  /** how-to 힌트 3단계 노출 시점 (초). */
-  FINDPACE_HINT_STAGE3_SEC: 22,
+  /** how-to 힌트 단계 전환 간격 (초). 클수록 한 메시지를 더 오래 보여줌(읽을 시간). */
+  FINDPACE_HINT_HOWTO_INTERVAL_SEC: 8,
 
   /** 게이지가 이 값 이상이면 how-to 유도 숨김 — 이미 방법을 찾은 것으로 간주. */
   FINDPACE_HINT_PROGRESS_GATE: 0.15,
 
-  /** 힌트 최소 유지 시간(ms) — 너무 자주 안 바뀌게(차분한 톤 유지). */
-  FINDPACE_HINT_HOLD_MS: 2600,
+  /** 힌트 최소 유지 시간(ms) — 읽을 시간 확보 + 깜빡임 방지(차분한 톤). */
+  FINDPACE_HINT_HOLD_MS: 4500,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
