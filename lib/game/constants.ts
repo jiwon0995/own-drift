@@ -46,7 +46,7 @@ export const GAME_CONSTANTS = {
   TUTORIAL_FAST_HOLD_SEC: 1.5,
 
   /** Tutorial slow 스텝: 이 시간(초) 동안 릴리스(비홀드) 상태면 done으로 전환. */
-  TUTORIAL_SLOW_RELEASE_SEC: 1.5,
+  TUTORIAL_SLOW_RELEASE_SEC: 5.0,
 
   /** 튜토리얼 스텝당 폴백 타임아웃(초). 조작 없어도 이 시간 후 자동 진행. */
   TUTORIAL_FALLBACK_SEC: 9,
