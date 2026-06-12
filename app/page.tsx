@@ -1,16 +1,15 @@
-import Shell from '@/components/screens/Shell';
+'use client';
+
+import Shell        from '@/components/screens/Shell';
+import ScreenRouter from '@/components/screens/ScreenRouter';
+import { useScreenFlow } from '@/hooks/useScreenFlow';
 
 export default function HomePage() {
+  const { screen, advance } = useScreenFlow('title');
+
   return (
     <Shell>
-      <div className="flex items-center justify-center h-full bg-game">
-        <h1
-          className="text-title font-pixel text-ink-primary tracking-[3px] text-center"
-          style={{ textShadow: '3px 3px 0 #b3611a, 5px 5px 0 #0a0706' }}
-        >
-          Own Drift
-        </h1>
-      </div>
+      <ScreenRouter screen={screen} onAdvance={advance} />
     </Shell>
   );
 }
