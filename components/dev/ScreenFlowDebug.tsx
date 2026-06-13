@@ -2,9 +2,10 @@
 
 import { useScreenFlow } from '@/hooks/useScreenFlow';
 import ScreenRouter from '@/components/screens/ScreenRouter';
+import GameStage from '@/components/game/GameStage';
 import type { Screen } from '@/lib/game/types';
 
-const ALL_SCREENS: Screen[] = ['title', 'tutorial', 'findPace', 'mainPlay', 'return', 'clear', 'continueOrEnd', 'ending'];
+const ALL_SCREENS: Screen[] = ['title', 'tutorial', 'findPace', 'journeyStart', 'mainPlay', 'return', 'clear', 'continueOrEnd', 'ending'];
 
 export default function ScreenFlowDebug() {
   const { screen, goTo, advance } = useScreenFlow('title');
@@ -43,7 +44,10 @@ export default function ScreenFlowDebug() {
         className="flex-1 border"
         style={{ borderColor: '#3a2a22', minHeight: 120 }}
       >
-        <ScreenRouter screen={screen} onAdvance={advance} paceState={null} onPaceSet={() => {}} onStabilized={() => {}} onCleared={() => {}} />
+        {/* 스테이지가 상위로 올라가 ScreenRouter는 더 이상 GameStage를 감싸지 않음 — 여기서 감싼다 */}
+        <GameStage screen={screen} ambient={screen === 'title'}>
+          <ScreenRouter screen={screen} onAdvance={advance} onPaceSet={() => {}} onCleared={() => {}} />
+        </GameStage>
       </div>
 
       <div className="font-pixel text-note text-ink-faint">

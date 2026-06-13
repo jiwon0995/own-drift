@@ -1,7 +1,7 @@
 'use client';
 
 import { useState }       from 'react';
-import Shell              from '@/components/screens/Shell';
+import GameStage          from '@/components/game/GameStage';
 import ScreenRouter       from '@/components/screens/ScreenRouter';
 import { useScreenFlow }  from '@/hooks/useScreenFlow';
 import { GAME_CONSTANTS } from '@/lib/game/constants';
@@ -60,13 +60,16 @@ export default function HomePage() {
   }
 
   return (
-    <Shell>
+    <GameStage
+      screen={screen}
+      ambient={screen === 'title'}
+      band={paceState?.band ?? null}
+      onStabilized={handleStabilized}
+    >
       <ScreenRouter
         screen={screen}
         onAdvance={advance}
-        paceState={paceState}
         onPaceSet={handlePaceSet}
-        onStabilized={handleStabilized}
         onCleared={handleCleared}
         returnIndex={returnIndex}
         onEncounterStabilized={handleEncounterStabilized}
@@ -77,6 +80,6 @@ export default function HomePage() {
         onSave={handleSave}
         onRestart={handleRestart}
       />
-    </Shell>
+    </GameStage>
   );
 }
