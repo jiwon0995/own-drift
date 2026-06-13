@@ -29,3 +29,23 @@ export function stepSpeed(
   const next = current + delta;
   return Math.min(c.MAX_SPEED, Math.max(c.MIN_SPEED, next));
 }
+
+/**
+ * 다른 존재(Phase 2C)의 끌어당김 — 위로 향하는 *약한* 드리프트 속도를 반환.
+ *
+ * **1A stepSpeed와 완전 분리.** 루프에서 stepSpeed(입력) 결과에 이 값을 더해 합성한다.
+ * - 존재가 앞설 때(presenceSpeed > currentSpeed)만 작동, 따라잡으면 0 → "쫓아도 보상 0".
+ * - strength(PULL_STRENGTH) < DECEL 이면 릴리스 감속이 항상 이겨 **저항 가능**(강제 아님).
+ * - presenceSpeed를 넘겨 끌어올리지 않음(드리프트 상한).
+ *
+ * @returns 이번 프레임에 더할 드리프트 속도 (≥ 0)
+ */
+export function applyPresencePull(
+  currentSpeed: number,
+  presenceSpeed: number,
+  strength: number,
+  dt: number,
+): number {
+  if (currentSpeed >= presenceSpeed) return 0;
+  return Math.min(strength * dt, presenceSpeed - currentSpeed);
+}

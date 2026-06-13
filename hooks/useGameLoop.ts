@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { stepSpeed }                          from '@/lib/game/engine';
+import { stepSpeed, applyPresencePull }       from '@/lib/game/engine';
 import { stepAnchorGauge, isInBand, stepStabilityGauge } from '@/lib/game/pace';
 import { GAME_CONSTANTS }                     from '@/lib/game/constants';
 import { GamePhase }                          from '@/lib/game/types';
@@ -19,11 +19,13 @@ interface UseGameLoopOptions {
 }
 
 interface UseGameLoopReturn {
-  snapshot:        LoopSnapshot;
-  start:           () => void;
-  stop:            () => void;
-  resetAnchor:     () => void;
-  resetStability:  () => void;
+  snapshot:           LoopSnapshot;
+  start:              () => void;
+  stop:               () => void;
+  resetAnchor:        () => void;
+  resetStability:     () => void;
+  /** 다른 존재 끌어당김 on/off (2C, Main Play 인카운터가 제어). */
+  setPresenceActive:  (active: boolean) => void;
 }
 
 export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn {
@@ -67,6 +69,10 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
   const stabilityRef  = useRef<number>(0);
   const hysteresisRef = useRef<HysteresisState>({ inBand: false });
 
+  // 다른 존재(Phase 2C) — 인카운터가 setPresenceActive로 끌어당김을 켠다.
+  const presenceActiveRef = useRef(false);
+  const stabilizationsRef = useRef(0); // 누적 안정 횟수(단조 증가)
+
   // ── UI 스냅샷 ─────────────────────────────────────────────────────
   const [snapshot, setSnapshot] = useState<LoopSnapshot>({
     speed:             c.START_SPEED,
@@ -76,6 +82,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     emaSpeed:          c.START_SPEED,
     stabilityProgress: 0,
     inBand:            false,
+    stabilizations:    0,
   });
 
   // ── rAF 루프 ──────────────────────────────────────────────────────
@@ -90,7 +97,15 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     if (ambientRef.current) {
       speedRef.current = cc.TITLE_AMBIENT_SPEED;
     } else {
+      // 1A 입력 속도 (stepSpeed 무변)
       speedRef.current = stepSpeed(speedRef.current, holdingRef.current, dt, cc);
+      // 2C 다른 존재 끌어당김 — 입력 결과에 약한 드리프트 합성. 존재는 내 페이스보다 살짝 앞.
+      const pband = bandRef.current;
+      if (presenceActiveRef.current && pband) {
+        const presenceTarget = (pband.lo + pband.hi) / 2 + cc.PRESENCE_APPROACH_SPEED;
+        const drift = applyPresencePull(speedRef.current, presenceTarget, cc.PULL_STRENGTH, dt);
+        speedRef.current = Math.min(cc.MAX_SPEED, Math.max(cc.MIN_SPEED, speedRef.current + drift));
+      }
     }
 
     scrollOffsetRef.current += speedRef.current * dt * cc.BG_SCROLL_PX_PER_UNIT;
@@ -109,8 +124,9 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
       hysteresisRef.current = isInBand(speedRef.current, band, hysteresisRef.current, cc.HYSTERESIS_MARGIN);
       stabilityRef.current  = stepStabilityGauge(stabilityRef.current, hysteresisRef.current.inBand, dt, cc);
       if (stabilityRef.current >= cc.STABILITY_GAUGE_FULL) {
-        stabilityRef.current = 0;          // 가득 → 리셋 ("한 번 찾음")
-        onStabilizedRef.current?.();        // 이벤트만 노출 — 카운트/클리어는 2C
+        stabilityRef.current     = 0;       // 가득 → 리셋 ("한 번 찾음")
+        stabilizationsRef.current += 1;     // 2C 카운트가 스냅샷에서 diff
+        onStabilizedRef.current?.();        // 저수준 이벤트 훅
       }
     }
 
@@ -124,6 +140,7 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
         emaSpeed:          anchorRef.current.emaSpeed,
         stabilityProgress: stabilityRef.current,
         inBand:            hysteresisRef.current.inBand,
+        stabilizations:    stabilizationsRef.current,
       });
     }
 
@@ -169,10 +186,14 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     setSnapshot(s => ({ ...s, stabilityProgress: 0, inBand: false }));
   }, []);
 
+  const setPresenceActive = useCallback((active: boolean) => {
+    presenceActiveRef.current = active;
+  }, []);
+
   useEffect(() => {
     start();
     return stop;
   }, [start, stop]);
 
-  return { snapshot, start, stop, resetAnchor, resetStability };
+  return { snapshot, start, stop, resetAnchor, resetStability, setPresenceActive };
 }

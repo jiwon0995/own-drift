@@ -13,6 +13,7 @@ interface ScreenRouterProps {
   paceState:     PaceState | null;
   onPaceSet:     (pace: PaceState) => void;
   onStabilized:  () => void;
+  onCleared:     () => void;
 }
 
 export default function ScreenRouter({
@@ -21,6 +22,7 @@ export default function ScreenRouter({
   paceState,
   onPaceSet,
   onStabilized,
+  onCleared,
 }: ScreenRouterProps) {
   const isAmbient = screen === 'title';
 
@@ -33,7 +35,7 @@ export default function ScreenRouter({
       {screen === 'title'    && <TitleScreen    onAdvance={onAdvance} />}
       {screen === 'tutorial' && <TutorialScreen onAdvance={onAdvance} />}
       {screen === 'findPace' && <FindPaceScreen onPaceSet={onPaceSet} />}
-      {screen === 'mainPlay' && <MainPlayScreen />}
+      {screen === 'mainPlay' && <MainPlayScreen onCleared={onCleared} />}
     </GameStage>
   );
 }

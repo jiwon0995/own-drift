@@ -149,6 +149,32 @@ export const GAME_CONSTANTS = {
 
   /** 상태 문구 최소 유지 시간(ms) — 경계에서 톡톡 바뀌어 재타이핑되는 깜빡임 방지. */
   STATUS_DEBOUNCE_MS: 2500,
+
+  // ── Phase 2C: 다른 존재 (외부 압박) ────────────────────────────────
+
+  /** Main Play 진입 후 첫 다른 존재 등장까지 평온 시간 (초). */
+  FIRST_ENCOUNTER_DELAY: 6,
+
+  /** 인카운터 사이 평온 복귀 시간 (초). */
+  INTER_ENCOUNTER_CALM: 4,
+
+  /**
+   * 다른 존재가 내 페이스보다 얼마나 빠른지 (units/s 상대 리드).
+   * 끌어당김 목표 = myPace + 이 값 → 어떤 플레이어든 "조금 앞선" 존재가 됨.
+   */
+  PRESENCE_APPROACH_SPEED: 0.4,
+
+  /** 끌어당김 드리프트 세기 (units/s). DECEL보다 작아 릴리스로 항상 상쇄 가능(강제 아님). */
+  PULL_STRENGTH: 0.25,
+
+  /** 클리어에 필요한 안정(=한 번 찾음) 횟수. */
+  REQUIRED_STABILIZATIONS: 3,
+
+  /** OtherPresence 등장(접근) 애니메이션 시간 (ms). */
+  PRESENCE_APPROACH_MS: 2600,
+
+  /** OtherPresence 페이드(소멸) 시간 (ms). */
+  PRESENCE_FADE_MS: 700,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
