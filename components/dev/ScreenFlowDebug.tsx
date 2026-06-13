@@ -4,7 +4,7 @@ import { useScreenFlow } from '@/hooks/useScreenFlow';
 import ScreenRouter from '@/components/screens/ScreenRouter';
 import type { Screen } from '@/lib/game/types';
 
-const ALL_SCREENS: Screen[] = ['title', 'tutorial', 'findPace'];
+const ALL_SCREENS: Screen[] = ['title', 'tutorial', 'findPace', 'mainPlay', 'return', 'clear', 'continueOrEnd', 'ending'];
 
 export default function ScreenFlowDebug() {
   const { screen, goTo, advance } = useScreenFlow('title');

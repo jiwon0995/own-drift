@@ -1,14 +1,16 @@
 'use client';
 
-import { useState }          from 'react';
-import Shell                 from '@/components/screens/Shell';
-import ScreenRouter          from '@/components/screens/ScreenRouter';
-import { useScreenFlow }     from '@/hooks/useScreenFlow';
-import type { PaceState }    from '@/lib/game/types';
+import { useState }       from 'react';
+import Shell              from '@/components/screens/Shell';
+import ScreenRouter       from '@/components/screens/ScreenRouter';
+import { useScreenFlow }  from '@/hooks/useScreenFlow';
+import { GAME_CONSTANTS } from '@/lib/game/constants';
+import type { PaceState } from '@/lib/game/types';
 
 export default function HomePage() {
-  const { screen, advance }            = useScreenFlow('title');
-  const [paceState, setPaceState]      = useState<PaceState | null>(null);
+  const { screen, advance, goTo }     = useScreenFlow('title');
+  const [paceState, setPaceState]     = useState<PaceState | null>(null);
+  const [returnIndex, setReturnIndex] = useState(1);
 
   function handlePaceSet(pace: PaceState) {
     setPaceState(pace);
@@ -16,12 +18,45 @@ export default function HomePage() {
   }
 
   function handleStabilized() {
-    // 안정 게이지 1회 가득 = "한 번 찾음". 저수준 이벤트 훅(루프가 게이지 리셋).
-    // 카운트는 Main Play 인카운터가 snapshot.stabilizations로 직접 처리한다.
+    // 저수준 이벤트 훅(루프가 게이지 리셋). 회차 카운트는 onEncounterStabilized가 담당.
   }
 
   function handleCleared() {
-    // 3회 안정 = 클리어. Phase 3: Clear/Continue/Ending 화면으로 전환되는 지점.
+    // 2C 저수준 이벤트. Phase 3 흐름은 onEncounterStabilized(count===3)로 Clear를 연다.
+  }
+
+  // 인카운터 1회 안정 → 회차별 Return
+  function handleEncounterStabilized(count: number) {
+    setReturnIndex(count);
+    goTo('return');
+  }
+
+  // Return dwell 후 → 3회 미만이면 다음 인카운터(MainPlay), 3회면 Clear
+  function handleReturnDone() {
+    goTo(returnIndex >= GAME_CONSTANTS.REQUIRED_STABILIZATIONS ? 'clear' : 'mainPlay');
+  }
+
+  function handleClearDone() {
+    goTo('continueOrEnd');
+  }
+
+  function handleContinue() {
+    setReturnIndex(1);
+    goTo('mainPlay'); // 자유(평온) 주행 복귀
+  }
+
+  function handleEnd() {
+    goTo('ending');
+  }
+
+  function handleSave() {
+    // Phase 6: canvas 캡처 → 이미지 저장. 지금은 stub.
+  }
+
+  function handleRestart() {
+    setPaceState(null);
+    setReturnIndex(1);
+    goTo('title'); // 처음부터 다시
   }
 
   return (
@@ -33,6 +68,14 @@ export default function HomePage() {
         onPaceSet={handlePaceSet}
         onStabilized={handleStabilized}
         onCleared={handleCleared}
+        returnIndex={returnIndex}
+        onEncounterStabilized={handleEncounterStabilized}
+        onReturnDone={handleReturnDone}
+        onClearDone={handleClearDone}
+        onContinue={handleContinue}
+        onEnd={handleEnd}
+        onSave={handleSave}
+        onRestart={handleRestart}
       />
     </Shell>
   );

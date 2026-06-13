@@ -1,5 +1,13 @@
 /** 인앱 화면 식별자 — useScreenFlow 전환 키 */
-export type Screen = 'title' | 'tutorial' | 'findPace' | 'mainPlay';
+export type Screen =
+  | 'title'
+  | 'tutorial'
+  | 'findPace'
+  | 'mainPlay'
+  | 'return'        // 1/2/3번째 찾음 (회차는 stabilizedCount로 구분)
+  | 'clear'         // 속도 찾음 (인정)
+  | 'continueOrEnd' // 계속 / 오늘은 여기까지
+  | 'ending';       // 당신의 풍경
 
 /** 속도 (단위: units/s, abstract). 항상 > 0 — 완전 정지 없음. */
 export type Speed = number;

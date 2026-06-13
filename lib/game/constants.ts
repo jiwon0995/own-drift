@@ -175,6 +175,17 @@ export const GAME_CONSTANTS = {
 
   /** OtherPresence 페이드(소멸) 시간 (ms). */
   PRESENCE_FADE_MS: 700,
+
+  // ── Phase 3: 화면 흐름 ─────────────────────────────────────────────
+
+  /** Return 화면 기본 dwell (ms, 1회차). INTER_ENCOUNTER_CALM보다 짧아 다음 등장 전에 닫힘. */
+  RETURN_DWELL_BASE_MS: 2600,
+
+  /** Return 회차당 dwell 증가 (ms) — 혼란→체화로 갈수록 길게(차분). */
+  RETURN_DWELL_STEP_MS: 700,
+
+  /** Clear 노출 후 ContinueOrEnd 자동 전환까지 (ms). */
+  CLEAR_DWELL_MS: 4200,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
