@@ -1,7 +1,10 @@
 import type { Screen } from '@/lib/game/types';
 
 /** 화면별 말풍선 문구. \n = 줄바꿈. */
-export const SCREEN_COPY: Record<Exclude<Screen, 'tutorial' | 'mainPlay'>, { bubble: string }> = {
+export const SCREEN_COPY: Record<
+  Exclude<Screen, 'tutorial' | 'mainPlay' | 'return' | 'clear' | 'continueOrEnd' | 'ending'>,
+  { bubble: string }
+> = {
   title: {
     bubble: '달리지 않아도 괜찮아요.\n먼저, 당신의 속도를 들어볼게요.',
   },
@@ -45,6 +48,38 @@ export const MAIN_PLAY_COPY = {
     drift:   '조금 멀어졌어요. 다시 찾으면 됩니다.', // 막 이탈
     stopped: '잠시 멈췄어요. 다시 돌아오면 이어집니다.', // 이탈 지속
   },
+} as const;
+
+// ── Phase 3: 화면 흐름 문구 (docs/03-screens.md 1.8~1.11) ──────────────
+
+/** Return 1/2/3 — 혼란 → 인식 → 체화. 단계-성공 아닌 인정의 톤. */
+export const RETURN_COPY = [
+  '처음으로 돌아왔어요.\n아직 낯설어도 괜찮아요.',
+  '이제 조금 알 것 같아요.\n당신의 리듬은 사라지지 않았어요.',
+  '이제 다시 찾을 수 있어요.\n당신의 속도는 당신 안에 있어요.',
+] as const;
+
+/** Clear — 승리 아닌 인정. 점수·랭킹 없음. */
+export const CLEAR_COPY = {
+  main: '당신의 속도를 찾았습니다.',
+  sub:  '이곳에는 피니시가 없습니다.\n계속 달려도 되고, 여기서 멈춰도 괜찮아요.',
+} as const;
+
+/** Continue or End — 두 선택 동등 무게. 종료는 포기가 아님. */
+export const CONTINUE_OR_END_COPY = {
+  prompt:   '계속 달려도 되고,\n여기서 멈춰도 괜찮아요.',
+  note:     '어느 쪽도 늦지 않습니다.',
+  continue: '계속 달리기',
+  end:      '오늘은 여기까지',
+} as const;
+
+/** Ending — 당신의 풍경. 순위·기록·수치 없음. */
+export const ENDING_COPY = {
+  main:        '당신의 풍경이 도착했어요.',
+  sub:         '빠르거나 느린 기록이 아니라,\n당신이 지나온 리듬입니다.',
+  placeholder: '당신의 풍경',
+  save:        '내 풍경 저장하기',
+  restart:     '다시 걸어보기',
 } as const;
 
 /**

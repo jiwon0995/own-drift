@@ -43,18 +43,22 @@ type PresencePhase = 'hidden' | 'active' | 'leaving';
 interface MainPlayScreenProps {
   /** 3회 안정 달성 = 클리어. Phase 3가 Clear/Continue/Ending으로 소비. */
   onCleared: () => void;
+  /** 인카운터 1회 안정 시 회차(count) 통지 — Phase 3가 Return 트리거로 소비. */
+  onEncounterStabilized?: (count: number) => void;
+  /** Return 오버레이가 위에 떠 있는 동안 본 화면 UI를 숨김(머신은 계속 구동). */
+  dimmed?: boolean;
 }
 
-export default function MainPlayScreen({ onCleared }: MainPlayScreenProps) {
+export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimmed = false }: MainPlayScreenProps) {
   const { snapshot, resetStability, setPresenceActive } = useGameStage();
   const [status,      setStatus]      = useState<Status>(ENTRY);
   const [presence,    setPresence]    = useState<PresencePhase>('hidden');
   const [encounterId, setEncounterId] = useState(0);
 
   // 최신 콜백 묶음 — 타이머 클로저 stale 방지 (effect에서 갱신해 render 중 ref-write 회피)
-  const apiRef = useRef({ resetStability, setPresenceActive, onCleared });
+  const apiRef = useRef({ resetStability, setPresenceActive, onCleared, onEncounterStabilized });
   useEffect(() => {
-    apiRef.current = { resetStability, setPresenceActive, onCleared };
+    apiRef.current = { resetStability, setPresenceActive, onCleared, onEncounterStabilized };
   });
 
   // 인카운터 상태 ref
@@ -86,6 +90,7 @@ export default function MainPlayScreen({ onCleared }: MainPlayScreenProps) {
     presenceRef.current = 'leaving';
     setPresence('leaving');
     countRef.current += 1;
+    apiRef.current.onEncounterStabilized?.(countRef.current); // 회차 통지 → Phase 3 Return
     const fadeId = setTimeout(() => {
       presenceRef.current = 'hidden';
       setPresence('hidden');
@@ -152,6 +157,9 @@ export default function MainPlayScreen({ onCleared }: MainPlayScreenProps) {
       return target;
     });
   }, [snapshot, onStabilization]);
+
+  // Return 오버레이가 위에 떠 있는 동안: 본 UI 숨김 (러너·배경은 GameStage라 그대로 유지)
+  if (dimmed) return <div className="absolute inset-0 pointer-events-none" aria-hidden />;
 
   return (
     <div className="absolute inset-0 pointer-events-none">

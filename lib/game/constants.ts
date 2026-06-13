@@ -14,10 +14,10 @@ export const GAME_CONSTANTS = {
   /** 게임 시작 초기 속도. */
   START_SPEED: 0.6,
 
-  /** 홀드 중 가속도 (units/s²). 크게 할수록 빠르게 MAX에 도달. */
+  /** 홀드 시 MAX로 수렴하는 비율(rate, 1/s). 1.0 = 시상수 1초. 크게 할수록 빠르게 MAX 접근. */
   ACCEL: 1.0,
 
-  /** 릴리스 후 감속도 (units/s²). 크게 할수록 MIN으로 빨리 복귀. */
+  /** 릴리스 시 MIN으로 수렴하는 비율(rate, 1/s). 0.5 = 시상수 2초. 크게 할수록 빨리 MIN 복귀. */
   DECEL: 0.5,
 
   /**
@@ -110,8 +110,12 @@ export const GAME_CONSTANTS = {
    */
   EMA_TAU: 3.0,
 
-  /** myPace 기준 band 허용 범위 (±비율). 0.15 = ±15%. */
-  TOLERANCE: 0.15,
+  /**
+   * myPace 기준 band 허용 범위 (±비율). 0.20 = ±20%.
+   * 안정 판정은 slow EMA(평균 페이스)로 하지만, 느린 리듬일수록 EMA에도 리플이 남는다
+   * (매우 느린 리듬 ≈ ±16%). 이를 덮고 차분하게 충전되도록 ±20%로 둔다.
+   */
+  TOLERANCE: 0.20,
 
   /** isInBand 히스테리시스 마진. enter/exit 임계 분리에 사용. */
   HYSTERESIS_MARGIN: 0.02,
@@ -175,6 +179,17 @@ export const GAME_CONSTANTS = {
 
   /** OtherPresence 페이드(소멸) 시간 (ms). */
   PRESENCE_FADE_MS: 700,
+
+  // ── Phase 3: 화면 흐름 ─────────────────────────────────────────────
+
+  /** Return 화면 기본 dwell (ms, 1회차). INTER_ENCOUNTER_CALM보다 짧아 다음 등장 전에 닫힘. */
+  RETURN_DWELL_BASE_MS: 2600,
+
+  /** Return 회차당 dwell 증가 (ms) — 혼란→체화로 갈수록 길게(차분). */
+  RETURN_DWELL_STEP_MS: 700,
+
+  /** Clear 노출 후 ContinueOrEnd 자동 전환까지 (ms). */
+  CLEAR_DWELL_MS: 4200,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;

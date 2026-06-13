@@ -4,12 +4,18 @@ import type { Speed } from './types';
 export interface SpeedConstants {
   MIN_SPEED: number;
   MAX_SPEED: number;
-  ACCEL:     number;
-  DECEL:     number;
+  ACCEL:     number;  // 누름 시 MAX로 수렴하는 비율(rate, 1/s)
+  DECEL:     number;  // 뗌 시 MIN으로 수렴하는 비율(rate, 1/s)
 }
 
 /**
  * 순수 함수 — 프레임 단위 속도 계산.
+ *
+ * **지수 접근 모델**: 누름은 MAX로, 뗌은 MIN으로 각 rate만큼 수렴한다.
+ * 선형(bang-bang) 모델은 interior 평형이 없어 일정 리듬이라도 듀티비에 따라
+ * 속도가 MIN/MAX로 *표류*했고, 그 결과 Find Pace에서 잡은 myPace를 Main Play에서
+ * 유지할 수 없었다. 지수 모델은 듀티비별 *안정된 평균 속도*에 수렴해
+ * "내 속도"가 실제로 유지 가능해진다.
  *
  * React/DOM 의존 없음. 단위 테스트 가능.
  *
@@ -25,8 +31,9 @@ export function stepSpeed(
   dt: number,
   c: SpeedConstants,
 ): Speed {
-  const delta = holding ? c.ACCEL * dt : -(c.DECEL * dt);
-  const next = current + delta;
+  const target = holding ? c.MAX_SPEED : c.MIN_SPEED;
+  const rate   = holding ? c.ACCEL     : c.DECEL;
+  const next   = target + (current - target) * Math.exp(-rate * dt);
   return Math.min(c.MAX_SPEED, Math.max(c.MIN_SPEED, next));
 }
 
