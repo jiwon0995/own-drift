@@ -16,8 +16,12 @@ export default function HomePage() {
   }
 
   function handleStabilized() {
-    // 안정 게이지 1회 가득 = "한 번 찾음". 루프가 게이지를 리셋했고 Main Play는 평온 유지.
-    // 2C: 여기서 3회 카운트 → 다른 존재 소멸/Clear 화면으로 이어진다.
+    // 안정 게이지 1회 가득 = "한 번 찾음". 저수준 이벤트 훅(루프가 게이지 리셋).
+    // 카운트는 Main Play 인카운터가 snapshot.stabilizations로 직접 처리한다.
+  }
+
+  function handleCleared() {
+    // 3회 안정 = 클리어. Phase 3: Clear/Continue/Ending 화면으로 전환되는 지점.
   }
 
   return (
@@ -28,6 +32,7 @@ export default function HomePage() {
         paceState={paceState}
         onPaceSet={handlePaceSet}
         onStabilized={handleStabilized}
+        onCleared={handleCleared}
       />
     </Shell>
   );

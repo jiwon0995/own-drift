@@ -11,9 +11,10 @@ import type { LoopSnapshot, Band } from '@/lib/game/types';
 import PixelRunner        from './PixelRunner';
 
 interface GameStageContextValue {
-  snapshot:       LoopSnapshot;
-  resetAnchor:    () => void;
-  resetStability: () => void;
+  snapshot:          LoopSnapshot;
+  resetAnchor:       () => void;
+  resetStability:    () => void;
+  setPresenceActive: (active: boolean) => void;
 }
 
 const GameStageContext = createContext<GameStageContextValue | null>(null);
@@ -40,7 +41,7 @@ const reducedMotion =
 export default function GameStage({ ambient = false, band = null, onStabilized, children }: GameStageProps) {
   const groundRef = useRef<HTMLDivElement>(null);
 
-  const { snapshot, resetAnchor, resetStability } = useGameLoop({
+  const { snapshot, resetAnchor, resetStability, setPresenceActive } = useGameLoop({
     bgRef:   reducedMotion ? undefined : groundRef,
     ambient,
     band,
@@ -48,7 +49,7 @@ export default function GameStage({ ambient = false, band = null, onStabilized, 
   });
 
   return (
-    <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability }}>
+    <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability, setPresenceActive }}>
       <div className="relative w-full h-full overflow-hidden">
 
         <div

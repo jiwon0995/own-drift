@@ -38,6 +38,7 @@ export const GAUGE_COPY = {
  */
 export const MAIN_PLAY_COPY = {
   entry: '내 속도대로..',
+  encounter: '바깥의 속도가 스쳐 갑니다.', // 다른 존재 등장 (2C)
   status: {
     inEnter: '리듬이 돌아오고 있어요.',           // 구간 재진입
     inHold:  '리듬이 이어지는 중…',               // 구간 안 지속(충전)

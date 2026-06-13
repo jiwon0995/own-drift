@@ -26,6 +26,7 @@ export interface LoopSnapshot {
   emaSpeed:          number;   // slow EMA 속도 — myPace 확정 시 사용
   stabilityProgress: number;   // 안정 게이지 0..STABILITY_GAUGE_FULL (Main Play)
   inBand:            boolean;  // 현재 속도가 내 구간 안인지 (히스테리시스 적용)
+  stabilizations:    number;   // 누적 안정 횟수 (게이지 가득 이벤트, 단조 증가) — 2C 카운트용
 }
 
 // ── 안착 게이지 내부 상태 (ref, rAF 루프) ──────────────────────────────
