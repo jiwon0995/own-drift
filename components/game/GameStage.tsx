@@ -40,9 +40,11 @@ const reducedMotion =
 
 export default function GameStage({ ambient = false, band = null, onStabilized, children }: GameStageProps) {
   const groundRef = useRef<HTMLDivElement>(null);
+  const rootRef   = useRef<HTMLDivElement>(null);
 
   const { snapshot, resetAnchor, resetStability, setPresenceActive } = useGameLoop({
     bgRef:   reducedMotion ? undefined : groundRef,
+    rootRef, // --stability를 여기에 매 프레임 write (자손이 상속)
     ambient,
     band,
     onStabilized,
@@ -50,7 +52,7 @@ export default function GameStage({ ambient = false, band = null, onStabilized, 
 
   return (
     <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability, setPresenceActive }}>
-      <div className="relative w-full h-full overflow-hidden">
+      <div ref={rootRef} className="relative w-full h-full overflow-hidden">
 
         <div
           className="absolute inset-0"

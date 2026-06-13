@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { stepSpeed, applyPresencePull }       from '@/lib/game/engine';
-import { stepAnchorGauge, isInBand, stepStabilityGauge } from '@/lib/game/pace';
+import { stepAnchorGauge, isInBand, stepStabilityGauge, computeStability } from '@/lib/game/pace';
 import { GAME_CONSTANTS }                     from '@/lib/game/constants';
 import { GamePhase }                          from '@/lib/game/types';
 import type { AnchorGaugeState, LoopSnapshot, Band, HysteresisState } from '@/lib/game/types';
@@ -10,6 +10,8 @@ import { useHoldInput }                       from './useHoldInput';
 
 interface UseGameLoopOptions {
   bgRef?:       React.RefObject<HTMLElement | null>;
+  /** --stability(0~1)를 매 프레임 inline write할 컨테이너 (Phase 4A 색 보간). */
+  rootRef?:     React.RefObject<HTMLElement | null>;
   constants?:   Partial<Record<keyof typeof GAME_CONSTANTS, number>>;
   ambient?:     boolean;
   /** 확정된 내 구간 — 있으면 매 프레임 안정 게이지 계산(Main Play). null이면 비활성. */
@@ -73,6 +75,10 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
   const presenceActiveRef = useRef(false);
   const stabilizationsRef = useRef(0); // 누적 안정 횟수(단조 증가)
 
+  // 연속 안정도 신호(Phase 4A) — smoothing 후 --stability로 DOM write.
+  const stabilitySignalRef = useRef(1);
+  const lastSignalWriteRef = useRef(-1); // -1: 첫 프레임 강제 write
+
   // ── UI 스냅샷 ─────────────────────────────────────────────────────
   const [snapshot, setSnapshot] = useState<LoopSnapshot>({
     speed:             c.START_SPEED,
@@ -133,6 +139,19 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
         stabilizationsRef.current += 1;     // 2C 카운트가 스냅샷에서 diff
         onStabilizedRef.current?.();        // 저수준 이벤트 훅
       }
+    }
+
+    // ── 연속 안정도 신호 → --stability (Phase 4A 색 보간 source of truth) ──
+    // band 없으면(타이틀~FindPace) 1(따뜻). 평균 페이스(emaSpeed) 기준 — 순간 속도면 색이 깜빡임.
+    const rawSignal = (band && !ambientRef.current)
+      ? computeStability(anchorRef.current.emaSpeed, band, cc.STABILITY_FALLOFF)
+      : 1;
+    stabilitySignalRef.current +=
+      (1 - Math.exp(-dt / cc.STABILITY_SMOOTHING)) * (rawSignal - stabilitySignalRef.current);
+    if (options.rootRef?.current &&
+        Math.abs(stabilitySignalRef.current - lastSignalWriteRef.current) > 0.004) {
+      lastSignalWriteRef.current = stabilitySignalRef.current;
+      options.rootRef.current.style.setProperty('--stability', stabilitySignalRef.current.toFixed(3));
     }
 
     if (timestamp - lastSnapshotRef.current >= cc.UI_THROTTLE_MS) {

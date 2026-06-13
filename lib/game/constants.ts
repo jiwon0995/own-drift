@@ -190,6 +190,17 @@ export const GAME_CONSTANTS = {
 
   /** Clear 노출 후 ContinueOrEnd 자동 전환까지 (ms). */
   CLEAR_DWELL_MS: 4200,
+
+  // ── Phase 4A: 상태 색 (연속 안정도 신호) ───────────────────────────
+
+  /**
+   * 안정도 falloff — band 중앙 기준 정규화 거리 d가 이 값일 때 안정도 0.5.
+   * 1/(1+(d/falloff)²). 크게 할수록 넓게 따뜻(천천히 식음).
+   */
+  STABILITY_FALLOFF: 1.3,
+
+  /** 안정도 신호 smoothing 시상수(초) — --stability 떨림 제거. 작을수록 빠르게 반응. */
+  STABILITY_SMOOTHING: 0.35,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;

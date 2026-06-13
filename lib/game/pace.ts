@@ -155,6 +155,22 @@ export function isInBand(
 }
 
 /**
+ * 연속 안정도 0~1 (Phase 4A) — 모든 상태 색의 source of truth.
+ *
+ * 1 = 구간 중앙(완전 안정), 멀어질수록 0으로 부드럽게 ease. isInBand(bool)의 연속판.
+ * band 중앙 기준 정규화 거리 d(= |speed-center| / 반폭)로 1/(1+(d/falloff)²).
+ *
+ * speed에는 *평균 페이스*(emaSpeed)를 넘긴다 — 순간 속도면 리듬마다 색이 깜빡인다.
+ */
+export function computeStability(speed: number, band: Band, falloff: number): number {
+  const center = (band.lo + band.hi) / 2;
+  const half   = (band.hi - band.lo) / 2;
+  if (half <= 0) return 0;
+  const dd = Math.abs(speed - center) / half / falloff;
+  return 1 / (1 + dd * dd);
+}
+
+/**
  * 안정 게이지 1프레임 진행 (Phase 2B).
  *
  * 내 구간 안(inBand)이면 충전, 벗어나면 멈춤 또는 아주 살짝 되돌림.
