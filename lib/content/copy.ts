@@ -1,12 +1,19 @@
 import type { Screen } from '@/lib/game/types';
 
 /** 화면별 말풍선 문구. \n = 줄바꿈. */
-export const SCREEN_COPY: Record<
+type BasicScreenCopy = { bubble: string };
+
+type ScreenCopy = Record<
   Exclude<Screen, 'tutorial' | 'mainPlay' | 'return' | 'clear' | 'continueOrEnd' | 'ending'>,
-  { bubble: string }
-> = {
+  BasicScreenCopy
+> & {
+  title: BasicScreenCopy & { startButton: string };
+};
+
+export const SCREEN_COPY: ScreenCopy = {
   title: {
-    bubble: '달리지 않아도 괜찮아요.\n먼저, 당신의 속도를 들어볼게요.',
+    bubble: '달려도, 걸어도 괜찮아요.\n당신만의 속도를 찾아볼게요.',
+    startButton: '내딛기',
   },
   findPace: {
     bubble: '이제 가장 편안한 속도로 걸어보세요.\n오래 머물 수 있는 리듬이면 충분해요.',

@@ -28,15 +28,14 @@ export default function TitleScreen({ onAdvance }: TitleScreenProps) {
 
       {/* 픽셀 타이틀 — game-screens.html .title-text 톤 */}
       <div
-        className="absolute left-0 right-0 text-center font-pixel tracking-[3px] text-ink-primary select-none"
+        className="absolute left-0 right-0 text-center text-[70px] font-pixel tracking-[3px] text-ink-primary select-none"
         style={{
           top:        90,
-          fontSize:   42,
           textShadow: '3px 3px 0 #b3611a, 5px 5px 0 #0a0706',
           zIndex:     9,
         }}
       >
-        Own Drift
+        OWN DRIFT
       </div>
 
       {/* 말풍선 — bubbleTop:300 (game-screens.html Title 기준) */}
@@ -62,7 +61,7 @@ export default function TitleScreen({ onAdvance }: TitleScreenProps) {
         }}
       >
         <Button variant="primary" onClick={handleStart} disabled={!bubbleDone}>
-          걸어보기
+          {SCREEN_COPY.title.startButton}
         </Button>
       </div>
 
