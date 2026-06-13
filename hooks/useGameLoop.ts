@@ -119,9 +119,14 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     anchorRef.current = stepAnchorGauge(anchorRef.current, speedRef.current, holdingRef.current, dt, cc);
 
     // 안정 게이지 — 내 구간이 설정된 동안(Main Play)만. 히스테리시스로 경계 떨림 방지.
+    //
+    // 판정은 *순간 속도*가 아니라 slow EMA(현재 평균 페이스)로 한다.
+    // myPace = Find Pace에서 찾은 리듬의 평균(emaSpeed)이라, band도 그 평균 기준.
+    // 리듬을 타면 순간 속도는 누름/뗌으로 크게 출렁여 band를 벗어나므로,
+    // 같은 평균을 유지하는지(emaSpeed ∈ band)를 봐야 게이지가 정상 충전된다.
     const band = bandRef.current;
     if (band && !ambientRef.current) {
-      hysteresisRef.current = isInBand(speedRef.current, band, hysteresisRef.current, cc.HYSTERESIS_MARGIN);
+      hysteresisRef.current = isInBand(anchorRef.current.emaSpeed, band, hysteresisRef.current, cc.HYSTERESIS_MARGIN);
       stabilityRef.current  = stepStabilityGauge(stabilityRef.current, hysteresisRef.current.inBand, dt, cc);
       if (stabilityRef.current >= cc.STABILITY_GAUGE_FULL) {
         stabilityRef.current     = 0;       // 가득 → 리셋 ("한 번 찾음")

@@ -110,8 +110,12 @@ export const GAME_CONSTANTS = {
    */
   EMA_TAU: 3.0,
 
-  /** myPace 기준 band 허용 범위 (±비율). 0.15 = ±15%. */
-  TOLERANCE: 0.15,
+  /**
+   * myPace 기준 band 허용 범위 (±비율). 0.20 = ±20%.
+   * 안정 판정은 slow EMA(평균 페이스)로 하지만, 느린 리듬일수록 EMA에도 리플이 남는다
+   * (매우 느린 리듬 ≈ ±16%). 이를 덮고 차분하게 충전되도록 ±20%로 둔다.
+   */
+  TOLERANCE: 0.20,
 
   /** isInBand 히스테리시스 마진. enter/exit 임계 분리에 사용. */
   HYSTERESIS_MARGIN: 0.02,
