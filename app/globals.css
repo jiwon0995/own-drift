@@ -73,13 +73,6 @@
   :root {
     --stability: 1;
 
-    /* 러너 등 — 전 구간 보간(안정=따뜻 ↔ 멀어짐=차가움) */
-    --accent-current: color-mix(
-      in oklab,
-      var(--color-accent-stable) calc(var(--stability) * 100%),
-      var(--color-accent-unstable)
-    );
-
     /* 게이지 채움 — 절제된 반응(불안정해도 55% 따뜻 유지) */
     --gauge-fill-current: color-mix(
       in oklab,
