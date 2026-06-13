@@ -190,6 +190,67 @@ export const GAME_CONSTANTS = {
 
   /** Clear 노출 후 ContinueOrEnd 자동 전환까지 (ms). */
   CLEAR_DWELL_MS: 4200,
+
+  // ── Phase 4A: 상태 색 (연속 안정도 신호) ───────────────────────────
+
+  /**
+   * 안정도 falloff — band 중앙 기준 정규화 거리 d가 이 값일 때 안정도 0.5.
+   * 1/(1+(d/falloff)²). 크게 할수록 넓게 따뜻(천천히 식음).
+   */
+  STABILITY_FALLOFF: 1.3,
+
+  /** 안정도 신호 smoothing 시상수(초) — --stability 떨림 제거. 작을수록 빠르게 반응. */
+  STABILITY_SMOOTHING: 0.35,
+
+  // ── Phase 4C: 배경 씬 진행 ─────────────────────────────────────────
+
+  /**
+   * 지면 스크롤 animation-duration 범위(초). Background가 scrollSpeed(0~1)를
+   * 이 구간으로 선형 매핑 — scrollSpeed=1 → FAST(빠름), 0 → SLOW(느림).
+   */
+  GROUND_SCROLL_FAST_S: 0.6,
+  GROUND_SCROLL_SLOW_S: 2.5,
+
+  /**
+   * scrollSpeed 양자화 단계 수. 평균 페이스(emaSpeed)를 0~1로 정규화 후 이 단계로 반올림해
+   * animation-duration 문자열을 안정화 — 매 스냅샷 미세 변동으로 애니메이션이 재시작(stutter)하지 않게.
+   */
+  SCROLL_SPEED_STEPS: 5,
+
+  /**
+   * 씬 전환 crossfade 시간(ms). JS(레이어 정리 타이머)와 CSS(animation-duration)가
+   * 같은 값을 쓰도록 단일 출처로 둔다 — Background가 inline animationDuration으로 주입.
+   */
+  SCENE_CROSSFADE_MS: 800,
+
+  // ── Phase 4B: 화면 선명도·흔들림 (불안정 반응) ──────────────────────
+
+  /** --stability=0(구간 이탈)일 때 씬 레이어 최대 blur(px). 안정=1이면 0(선명). */
+  VIEWPORT_BLUR_MAX_PX: 1.6,
+
+  /** --stability=0일 때 씬 흔들림 최대 진폭(px). prefers-reduced-motion이면 무시. */
+  VIEWPORT_SHAKE_MAX_PX: 1.5,
+
+  // ── Phase 4C: 지원회사 배너 (이스터에그) ────────────────────────────
+
+  /** Clear 인식 후 양옆 배너가 company로 전환되기까지 지연(ms). 즉각 튀지 않게. */
+  BANNER_SWAP_DELAY_MS: 800,
+
+  /** 배너 idle↔loud(광고 문구) 전환 디바운스(ms) — 깜빡임 없이 차분하게. */
+  BANNER_SORAN_DEBOUNCE_MS: 1400,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
+
+/**
+ * gameProgress(0~1) → 씬 커트라인. progressToScene 단일 출처.
+ * [road|cityDay) [cityDay|cityNight) [cityNight|highway) 경계.
+ * 숫자 배열이라 GAME_CONSTANTS(루프 override가 number로 한정)와 분리해 둔다.
+ */
+export const SCENE_THRESHOLDS = [0.25, 0.5, 0.75] as const;
+
+/**
+ * 클리어 시 배너에 등장하는 지원 회사명(이스터에그).
+ * TODO: 실제 회사명으로 교체. 광고가 아닌 애정 어린 오마주.
+ */
+export const COMPANY_NAME = '지원회사';

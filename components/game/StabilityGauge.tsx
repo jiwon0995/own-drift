@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * 안착(Find Pace) 게이지 — design-system .gauge 이식 최소판.
- * 폴리싱(애니메이션·색 보간)은 Phase 4.
- * prefers-reduced-motion: 채움 표시 없음(정적 빈 게이지).
+ * 안정 게이지 — design-system .gauge 이식 최소판. 동작 로직은 2B 그대로(progress만 받음).
+ * 채움색은 --gauge-fill-current로 stability에 *절제되게* 반응(Phase 4A).
+ * prefers-reduced-motion: 채움 너비 표시 없음(정적 빈 게이지) — 색 보간은 모션 아님이라 무관.
  */
 
 import { GAUGE_COPY } from '@/lib/content/copy';
@@ -40,12 +40,12 @@ export default function StabilityGauge({ progress, full, label = GAUGE_COPY.anch
           padding:   2,
         }}
       >
-        {/* 채움 */}
+        {/* 채움 — 색은 stability에 절제되게 반응 */}
         <div
           style={{
             width:      `${fillPct}%`,
             height:     '100%',
-            background: '#ffb257',
+            background: 'var(--gauge-fill-current)',
             boxShadow:  fillPct > 0 ? 'inset 0 0 0 1px #ffd9a0' : 'none',
           }}
         />

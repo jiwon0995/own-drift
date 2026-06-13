@@ -3,11 +3,20 @@ export type Screen =
   | 'title'
   | 'tutorial'
   | 'findPace'
+  | 'journeyStart'  // Find Pace → Main Play 사이 내러티브 전환(버튼 없음, 자동 진행)
   | 'mainPlay'
   | 'return'        // 1/2/3번째 찾음 (회차는 stabilizedCount로 구분)
   | 'clear'         // 속도 찾음 (인정)
   | 'continueOrEnd' // 계속 / 오늘은 여기까지
   | 'ending';       // 당신의 풍경
+
+/**
+ * 배경 씬 — 게임 진행도(gameProgress)에 따라 단방향 진행한다(역행 없음).
+ * 진행도 구간 매핑은 engine.progressToScene, clear 시 'space' 고정은 호출측.
+ * 'journeyStart'는 진행도 매핑 밖의 내러티브 전환 전용 씬(JourneyStartScreen이 직접 렌더).
+ * 'dawn'은 MVP 스트레치라 이번 범위에선 미구현.
+ */
+export type Scene = 'road' | 'journeyStart' | 'cityDay' | 'cityNight' | 'highway' | 'space';
 
 /** 속도 (단위: units/s, abstract). 항상 > 0 — 완전 정지 없음. */
 export type Speed = number;

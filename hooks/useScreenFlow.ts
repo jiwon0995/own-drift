@@ -4,9 +4,10 @@ import { useState, useCallback } from 'react';
 import type { Screen } from '@/lib/game/types';
 
 const TRANSITIONS: Partial<Record<Screen, Screen>> = {
-  title:     'tutorial',
-  tutorial:  'findPace',
-  findPace:  'mainPlay',
+  title:        'tutorial',
+  tutorial:     'findPace',
+  findPace:     'journeyStart',
+  journeyStart: 'mainPlay',
 };
 
 interface UseScreenFlowReturn {

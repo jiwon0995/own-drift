@@ -1,4 +1,5 @@
-import type { Speed } from './types';
+import type { Speed, Scene } from './types';
+import { SCENE_THRESHOLDS } from './constants';
 
 /** stepSpeed에 필요한 튜닝값만 구조적으로 받음 — 리터럴 타입 전파 방지 */
 export interface SpeedConstants {
@@ -55,4 +56,36 @@ export function applyPresencePull(
 ): number {
   if (currentSpeed >= presenceSpeed) return 0;
   return Math.min(strength * dt, presenceSpeed - currentSpeed);
+}
+
+/**
+ * 게임 진행도(0~1) → 배경 씬 (Phase 4C). **단방향** — 진행도가 커질수록
+ * road → cityDay → cityNight → highway로만 나아가고 역행하지 않는다.
+ *
+ * 커트라인은 SCENE_THRESHOLDS(단일 출처). 경계는 [lo, hi) 반열림:
+ *   p<0.25 road · p<0.5 cityDay · p<0.75 cityNight · 그 외 highway.
+ *
+ * clear 시 'space'로의 점프는 게임 진행도와 무관하므로 호출측(GameStage)이 처리한다.
+ * 범위 밖 입력도 안전하게 양 끝 씬으로 수렴한다(클램프 불필요).
+ *
+ * React/DOM 의존 없음. 단위 테스트 가능.
+ */
+export function progressToScene(gameProgress: number): Scene {
+  const [toCityDay, toCityNight, toHighway] = SCENE_THRESHOLDS;
+  if (gameProgress < toCityDay)   return 'road';
+  if (gameProgress < toCityNight) return 'cityDay';
+  if (gameProgress < toHighway)   return 'cityNight';
+  return 'highway';
+}
+
+/**
+ * 본편(journeyStart 이후 mainPlay/return) 씬 진행 — road 프롤로그 구간[0, SCENE_THRESHOLDS[0])을
+ * 건너뛰고 cityDay → cityNight → highway로 매핑한다. **진입(gameProgress 0)은 cityDay(도시)**.
+ *
+ * road는 title/tutorial/findPace 프롤로그 전용 씬이라 본편 진행에서 제외한다.
+ * 커트라인은 progressToScene(=SCENE_THRESHOLDS) 단일 출처를 그대로 재사용한다.
+ */
+export function playProgressToScene(gameProgress: number): Scene {
+  const base = SCENE_THRESHOLDS[0]; // road 구간 폭 = cityDay 시작점
+  return progressToScene(base + gameProgress * (1 - base));
 }

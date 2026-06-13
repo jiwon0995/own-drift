@@ -1,10 +1,15 @@
 'use client';
 
+/**
+ * 화면 라우터 — 현재 screen에 맞는 오버레이만 렌더한다.
+ * 지속 스테이지(GameStage: 셸·배너·배경·러너·루프)는 상위(app/page)에서 이 라우터를 감싼다.
+ */
+
 import type { Screen, PaceState } from '@/lib/game/types';
-import GameStage           from '@/components/game/GameStage';
 import TitleScreen         from './TitleScreen';
 import TutorialScreen      from './TutorialScreen';
 import FindPaceScreen      from './FindPaceScreen';
+import JourneyStartScreen  from './JourneyStartScreen';
 import MainPlayScreen      from './MainPlayScreen';
 import ReturnScreen        from './ReturnScreen';
 import ClearScreen         from './ClearScreen';
@@ -16,9 +21,7 @@ const noop = () => {};
 interface ScreenRouterProps {
   screen:        Screen;
   onAdvance:     () => void;
-  paceState:     PaceState | null;
   onPaceSet:     (pace: PaceState) => void;
-  onStabilized:  () => void;
   onCleared:     () => void;
   // ── Phase 3 흐름 (옵셔널: 없으면 no-op — dev 화면 등) ──
   returnIndex?:            number;
@@ -34,9 +37,7 @@ interface ScreenRouterProps {
 export default function ScreenRouter({
   screen,
   onAdvance,
-  paceState,
   onPaceSet,
-  onStabilized,
   onCleared,
   returnIndex            = 1,
   onEncounterStabilized  = noop,
@@ -47,17 +48,13 @@ export default function ScreenRouter({
   onSave                 = noop,
   onRestart              = noop,
 }: ScreenRouterProps) {
-  const isAmbient = screen === 'title';
-
   return (
-    <GameStage
-      ambient={isAmbient}
-      band={paceState?.band ?? null}
-      onStabilized={onStabilized}
-    >
-      {screen === 'title'    && <TitleScreen    onAdvance={onAdvance} />}
-      {screen === 'tutorial' && <TutorialScreen onAdvance={onAdvance} />}
-      {screen === 'findPace' && <FindPaceScreen onPaceSet={onPaceSet} />}
+    <>
+      {screen === 'title'        && <TitleScreen    onAdvance={onAdvance} />}
+      {screen === 'tutorial'     && <TutorialScreen onAdvance={onAdvance} />}
+      {screen === 'findPace'     && <FindPaceScreen onPaceSet={onPaceSet} />}
+      {/* journeyStart → mainPlay: TRANSITIONS가 매핑하므로 onAdvance로 전진 */}
+      {screen === 'journeyStart' && <JourneyStartScreen onComplete={onAdvance} />}
 
       {/* MainPlay는 return 중에도 마운트 유지(인카운터 count/머신 보존), UI만 dimmed */}
       {(screen === 'mainPlay' || screen === 'return') && (
@@ -72,6 +69,6 @@ export default function ScreenRouter({
       {screen === 'clear'         && <ClearScreen onDone={onClearDone} />}
       {screen === 'continueOrEnd' && <ContinueOrEndScreen onContinue={onContinue} onEnd={onEnd} />}
       {screen === 'ending'        && <EndingScreen onSave={onSave} onRestart={onRestart} />}
-    </GameStage>
+    </>
   );
 }

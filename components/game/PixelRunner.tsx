@@ -120,7 +120,8 @@ export default function PixelRunner({ speed, paused = false }: PixelRunnerProps)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused, reducedMotion]);
 
-  const shadow  = buildShadow(RUN[frame], '#ffb257');
+  // 러너 색은 기본 fig-player(#ffb257) 고정 — 속도/안정도와 무관(사용자 요청).
+  const shadow  = buildShadow(RUN[frame], 'var(--color-fig-player)');
   const bounceAmp = (paused || reducedMotion)
     ? 0
     : GAIT_BOUNCE[gait] * GAME_CONSTANTS.RUNNER_BOUNCE_PX;
