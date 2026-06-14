@@ -32,6 +32,8 @@ interface ScreenRouterProps {
   onEnd?:                  () => void;
   onSave?:                 () => void;
   onRestart?:              () => void;
+  /** Phase 6 — 엔딩 엽서에 표시할 캡처 이미지(null이면 단색 fallback). */
+  capturedImage?:          string | null;
 }
 
 export default function ScreenRouter({
@@ -47,6 +49,7 @@ export default function ScreenRouter({
   onEnd                  = noop,
   onSave                 = noop,
   onRestart              = noop,
+  capturedImage          = null,
 }: ScreenRouterProps) {
   return (
     <>
@@ -68,7 +71,7 @@ export default function ScreenRouter({
       {screen === 'return'        && <ReturnScreen index={returnIndex} onDone={onReturnDone} />}
       {screen === 'clear'         && <ClearScreen onDone={onClearDone} />}
       {screen === 'continueOrEnd' && <ContinueOrEndScreen onContinue={onContinue} onEnd={onEnd} />}
-      {screen === 'ending'        && <EndingScreen onSave={onSave} onRestart={onRestart} />}
+      {screen === 'ending'        && <EndingScreen onSave={onSave} onRestart={onRestart} capturedImage={capturedImage} />}
     </>
   );
 }

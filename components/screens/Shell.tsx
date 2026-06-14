@@ -8,10 +8,12 @@ interface ShellProps {
    * 양옆 배너(aside)와 게임 뷰포트(main)가 *공통 조상*에서 상속한다 (Phase 4A/4B).
    */
   rootRef?:     Ref<HTMLDivElement>;
+  /** 게임 뷰포트(main)에 붙는 ref — Phase 6 캡처가 크기·러너색을 읽는다. */
+  viewportRef?: Ref<HTMLElement>;
   children:     ReactNode;
 }
 
-export default function Shell({ leftBanner, rightBanner, rootRef, children }: ShellProps) {
+export default function Shell({ leftBanner, rightBanner, rootRef, viewportRef, children }: ShellProps) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-base">
       {/*
@@ -27,7 +29,7 @@ export default function Shell({ leftBanner, rightBanner, rootRef, children }: Sh
         <aside className="hidden md:block">{leftBanner}</aside>
 
         {/* 게임 뷰포트 */}
-        <main className="scanline-vignette relative overflow-hidden h-full">
+        <main ref={viewportRef} className="scanline-vignette relative overflow-hidden h-full">
           {children}
         </main>
 

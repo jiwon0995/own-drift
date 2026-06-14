@@ -13,7 +13,7 @@
  * scene/scrollSpeed/bannerVariant는 이 컴포넌트가 snapshot+screen에서 파생한다.
  */
 
-import { createContext, useContext, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode, type Ref } from 'react';
 import { useGameLoop }      from '@/hooks/useGameLoop';
 import { useAudio }         from '@/hooks/useAudio';
 import { GAME_CONSTANTS }   from '@/lib/game/constants';
@@ -63,17 +63,23 @@ interface GameStageProps {
   band?:         Band | null;
   /** 안정 게이지 가득 이벤트 (2C·Phase 3 소비). */
   onStabilized?: () => void;
+  /** 게임 뷰포트(main)에 전달할 ref — Phase 6 엔딩 캡처용. */
+  viewportRef?:  Ref<HTMLElement>;
   children?:     ReactNode;
 }
 
-export default function GameStage({ screen, ambient = false, band = null, onStabilized, children }: GameStageProps) {
+export default function GameStage({ screen, ambient = false, band = null, onStabilized, viewportRef, children }: GameStageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // 클리어 이후(clear/continueOrEnd/ending)는 평온 — 씬을 space로 고정하듯 --stability도 1로 둬
+  // 배너 소란(loud)·씬 색온도 변화를 끈다. band=null이면 루프가 rawSignal=1로 유지(Phase 6).
+  const loopBand = POST_CLEAR_SCREENS.includes(screen) ? null : band;
 
   // 루프: --stability를 rootRef(셸 그리드)에 write. bgRef는 넘기지 않음 — 지면 스크롤은 Background가 CSS로.
   const { snapshot, resetAnchor, resetStability, setPresenceActive } = useGameLoop({
     rootRef,
     ambient,
-    band,
+    band: loopBand,
     onStabilized,
   });
 
@@ -104,6 +110,7 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
     <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability, setPresenceActive }}>
       <Shell
         rootRef={rootRef}
+        viewportRef={viewportRef}
         leftBanner={<SideBanner side="left" />}
         rightBanner={<SideBanner side="right" />}
       >
