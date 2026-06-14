@@ -29,7 +29,7 @@ const FINAL_HOLD_MS     = 600;   // 마지막 문단 완료 후 슬라이드 시
 const SLIDE_MS          = 1100;  // 슬라이드 전환 시간
 const SLIDE_FALLBACK_MS = 1300;  // transitionend 누락(hidden 탭) 대비 폴백
 const NARRATIVE_SCROLL  = 0.5;   // journeyStart 지면 스크롤(전진감) — 게이지 무관 고정값
-const BUBBLE_TOP        = 300;   // 말풍선 세로 위치(game-screens.html bubbleTop)
+const BUBBLE_TOP        = 200;   // 말풍선 세로 위치(game-screens.html bubbleTop)
 
 /**
  * 슬라이드가 드러낼 씬 = Main Play 진입 씬 = cityDay(도시).
