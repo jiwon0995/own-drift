@@ -6,9 +6,9 @@ export type Screen =
   | 'journeyStart'  // Find Pace → Main Play 사이 내러티브 전환(버튼 없음, 자동 진행)
   | 'mainPlay'
   | 'return'        // 1/2/3번째 찾음 (회차는 stabilizedCount로 구분)
-  | 'clear'         // 속도 찾음 (인정)
-  | 'continueOrEnd' // 계속 / 오늘은 여기까지
-  | 'ending';       // 당신의 풍경
+  | 'clear'         // 속도 찾음 (인정) — 진입 시 풍경 캡처 1회, 짧게 머문 뒤 landscape로
+  | 'landscape'     // 당신의 풍경 (엽서 + 저장/간직) — 클리어한 모든 플레이어가 본다
+  | 'crossroad';    // 갈림길 (계속 달리기 / 다시 내딛기)
 
 /**
  * 배경 씬 — 게임 진행도(gameProgress)에 따라 단방향 진행한다(역행 없음).
