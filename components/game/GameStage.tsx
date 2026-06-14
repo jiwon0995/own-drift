@@ -15,11 +15,13 @@
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameLoop }      from '@/hooks/useGameLoop';
+import { useAudio }         from '@/hooks/useAudio';
 import { GAME_CONSTANTS }   from '@/lib/game/constants';
 import { playProgressToScene } from '@/lib/game/engine';
 import type { LoopSnapshot, Band, Scene, Screen } from '@/lib/game/types';
 import Shell                from '@/components/screens/Shell';
 import SideBanner           from '@/components/hud/SideBanner';
+import MuteButton           from '@/components/hud/MuteButton';
 import Background           from './Background';
 import PixelRunner         from './PixelRunner';
 
@@ -94,6 +96,12 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
   const norm        = (snapshot.emaSpeed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED);
   const scrollSpeed = Math.max(0, Math.min(1, Math.round(norm * SCROLL_SPEED_STEPS) / SCROLL_SPEED_STEPS));
 
+  // ── Phase 5 오디오 ──
+  // BGM(전 구간) + 발자국(playbackRate ← 순간 속도, 러너 gait와 동기) + 앰비언스(scene 연동).
+  // 발자국은 평균이 아닌 *순간* 속도(snapshot.speed)로 — 보이는 발과 일치. 음소거는 master 전체.
+  const footSpeed = Math.max(0, Math.min(1, (snapshot.speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)));
+  const { isMuted, toggleMute } = useAudio({ scene, speed: footSpeed });
+
   // ── 4C 배너 이스터에그 ──
   // clear 진입 → BANNER_SWAP_DELAY_MS 후 company(cleared=true). 단방향 — title 복귀로만 해제.
   // idle↔loud '소란'의 *연속 배경*은 --banner-soran(CSS)이 구동 — 여기 React 상태는 company 스왑만.
@@ -145,6 +153,9 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
 
         {/* 화면 오버레이 */}
         <div className="absolute inset-0 z-[10]">{children}</div>
+
+        {/* 음소거 토글 — 뷰포트 우측 상단(스캔라인 위, 오버레이 위) */}
+        <MuteButton isMuted={isMuted} onToggle={toggleMute} />
       </Shell>
     </GameStageContext.Provider>
   );
