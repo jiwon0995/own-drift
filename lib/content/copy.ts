@@ -34,17 +34,25 @@ export const JOURNEY_START_PARAGRAPHS = [
 /** Tutorial 서브 스텝별 말풍선 문구. */
 export type TutorialStep = 'fast' | 'slow' | 'done';
 
-export const TUTORIAL_STEP_COPY: Record<TutorialStep, { bubble: string }> = {
-  fast: {
-    bubble: '조금 빨라져볼까요?\nSpacebar 키를 눌러보세요.',
-  },
-  slow: {
-    bubble: '이번엔 천천히 가볼까요?\nSpacebar에서 손을 떼보세요.',
-  },
-  done: {
-    bubble: '좋아요.\n속도는 언제든 바뀔 수 있어요.',
-  },
-};
+/** 입력 디바이스별 조작 안내 — 데스크톱(키보드) / 모바일(터치). */
+const TUTORIAL_ACTION = {
+  keyboard: { press: 'Spacebar 키를 눌러보세요.', release: 'Spacebar에서 손을 떼보세요.' },
+  touch:    { press: '화면을 길게 눌러보세요.',     release: '화면에서 손을 떼보세요.' },
+} as const;
+
+const tutorialSteps = (a: { press: string; release: string }): Record<TutorialStep, { bubble: string }> => ({
+  fast: { bubble: `조금 빨라져볼까요?\n${a.press}` },
+  slow: { bubble: `이번엔 천천히 가볼까요?\n${a.release}` },
+  done: { bubble: '좋아요.\n속도는 언제든 바뀔 수 있어요.' },
+});
+
+/** 데스크톱(키보드) 기본 문구. dev 디버그가 직접 참조. */
+export const TUTORIAL_STEP_COPY = tutorialSteps(TUTORIAL_ACTION.keyboard);
+
+/** 디바이스 인식 튜토리얼 문구 — touch=true면 '화면을 눌러보세요'로 교체. */
+export function tutorialStepCopy(touch: boolean): Record<TutorialStep, { bubble: string }> {
+  return touch ? tutorialSteps(TUTORIAL_ACTION.touch) : TUTORIAL_STEP_COPY;
+}
 
 /** 게이지 라벨 — Find Pace(안착) / Main Play(안정) */
 export const GAUGE_COPY = {

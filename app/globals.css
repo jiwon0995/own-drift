@@ -64,6 +64,10 @@
   body {
     font-family: 'DungGeunMo', 'Apple SD Gothic Neo', 'Malgun Gothic', monospace;
     image-rendering: pixelated;
+    /* 모바일 탭 위생 — 누름 하이라이트 깜빡임·iOS 길게 누름 콜아웃(돋보기) 제거.
+       홀드 게임이라 길게 누름이 잦다. (줌/선택 차단은 게임 뷰포트의 touch-none·select-none.) */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
   }
 
   /* ── 상태 색 보간 (Phase 4A) ──
