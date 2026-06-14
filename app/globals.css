@@ -1,26 +1,183 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ================================================================
+   DESIGN TOKENS — Tailwind v4 @theme
+   ================================================================ */
+@theme {
+  /* surfaces */
+  --color-base:           #17100f;
+  --color-game:           #2b1a17;
+  --color-game-unstable:  #1c1a1f;
+
+  /* banners */
+  --color-banner-idle:    #241a17;
+  --color-banner-loud:    #3a2a22;
+  --color-banner-company: #2b1a17;
+
+  /* ink */
+  --color-ink-primary:    #f3e6d8;
+  --color-ink-soft:       #b89a86;
+  --color-ink-faint:      #7a6256;
+
+  /* accent */
+  --color-accent-stable:   #ffb257;
+  --color-accent-unstable: #7e8a99;
+  --color-accent-neutral:  #c8a98f;
+
+  /* gauge */
+  --color-gauge-track: #3a2a22;
+  --color-gauge-fill:  #ff9614;
+
+  /* character */
+  --color-fig-player: #ffb257;
+  --color-fig-other:  #ffffff;
+
+  /* type scale */
+  --text-title:   46px;
+  --text-heading: 22px;
+  --text-body:    17px;
+  --text-label:   13px;
+  --text-note:    11px;
+
+  /* pixel font stack */
+  --font-pixel: 'DungGeunMo', 'Press Start 2P', 'Apple SD Gothic Neo',
+                'Malgun Gothic', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ================================================================
+   FONT — self-hosted, @layer base (only place raw CSS is allowed)
+   ================================================================ */
+@layer base {
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('/fonts/DungGeunMo.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 
-@media (prefers-color-scheme: dark) {
+  html {
+    background-color: #17100f;
+    color: #f3e6d8;
+  }
+
+  body {
+    font-family: 'DungGeunMo', 'Apple SD Gothic Neo', 'Malgun Gothic', monospace;
+    image-rendering: pixelated;
+  }
+
+  /* ── 상태 색 보간 (Phase 4A) ──
+     --stability(0~1)는 게임 루프가 GameStage 컨테이너에 매 프레임 inline write한다.
+     보간색은 color-mix로 — 매 프레임 JS 색연산을 피한다.
+     endpoint는 @theme의 --color-accent-stable(따뜻) / --color-accent-unstable(차가움). */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --stability: 1;
+
+    /* 게이지 채움 — 절제된 반응(불안정해도 55% 따뜻 유지) */
+    --gauge-fill-current: color-mix(
+      in oklab,
+      var(--color-accent-stable) calc((0.55 + var(--stability) * 0.45) * 100%),
+      var(--color-accent-unstable)
+    );
+
+    /* 배너 소란 (Phase 4B) — 안정=차분(idle) ↔ 구간 이탈=소란(loud)으로 *연속* 보간.
+       --stability는 GameStage 루트(배너·뷰포트 공통 조상)에 매 프레임 write되어 상속된다.
+       --gauge-fill-current와 같은 lazy-substitution 패턴(사용 지점에서 --stability 해석). */
+    --banner-soran: color-mix(
+      in oklab,
+      var(--color-banner-loud) calc((1 - var(--stability)) * 85%),
+      var(--color-banner-idle)
+    );
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ================================================================
+   REUSABLE RETRO EFFECTS — @layer components
+   ================================================================ */
+@layer components {
+  /* 픽셀 프레임: 다중 inset shadow 액자 */
+  .pixel-frame {
+    border: 4px solid #0a0706;
+    box-shadow:
+      inset 0 0 0 2px #5e4133,
+      inset 0 0 0 4px #0a0706,
+      0 0 0 2px #2b1a17,
+      8px 8px 0 0 rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+  }
+
+  /* SpeechBubble 깜빡 커서 */
+  .cursor-blink {
+    animation: blink 0.5s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 스캔라인 + 비네팅: ::after pseudo-element 용 */
+  .scanline-vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+    mix-blend-mode: multiply;
+  }
+
+  /* ── 씬 전환 crossfade (Phase 4C) ──
+     새 레이어가 0→1로 fade-in해 이전 레이어를 덮는다. duration은 Background가
+     SCENE_CROSSFADE_MS로 inline 주입(단일 출처). */
+  .scene-layer {
+    animation-name: scene-fade-in;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+  }
+  @keyframes scene-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── 지면 스크롤 라인 (Phase 4C) ──
+     animation-duration은 Background가 scrollSpeed→초로 inline 주입. */
+  .ground-scroll-line {
+    background-image: repeating-linear-gradient(90deg, #5e4438 0 12px, transparent 12px 24px);
+    background-repeat: repeat-x;
+    background-size: 24px 2px;
+    animation-name: ground-scroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @keyframes ground-scroll { to { background-position: -24px 0; } }
+
+  /* ── 씬 레이어 색온도 (Phase 4B) ──
+     --stability(이탈=0)에 반응: 채도·밝기가 식는다. 안정=1이면 원본. (blur 효과는 제거됨)
+     러너·UI는 이 래퍼 밖이라 또렷하게 유지 — "세상은 흔들려도 나는 나." */
+  .scene-fx {
+    filter:
+      saturate(calc(0.8 + 0.2 * var(--stability)))
+      brightness(calc(0.92 + 0.08 * var(--stability)));
+    will-change: filter;
+  }
+
+  /* ── 양옆 사이드 배너 (고정 이미지 + 게임 중 효과) ──
+     이미지는 SideBanner가 깔고(왼쪽 banner-1 / 오른쪽 banner-2), 그 위 .side-banner__fx가
+     --stability 기반 소란을 blend로 얹는다. 안정(=1)이면 opacity 0으로 이미지 그대로,
+     구간 이탈(→0)일수록 --banner-soran(loud쪽)이 overlay로 진해진다.
+     --banner-soran은 JS가 --stability를 smoothing해 주입하므로 CSS transition은 얹지 않는다. */
+  .side-banner__fx {
+    background: var(--banner-soran);
+    opacity: calc((1 - var(--stability)) * 0.6);
+    mix-blend-mode: overlay;
+  }
+
+  /* ── 음소거 버튼 (Phase 5) ──
+     아이콘은 box-shadow 픽셀이 --mute-icon을 참조(MuteButton). 색만 여기서 상태별로 준다:
+     기본 ink-soft · hover accent · muted ink-faint. opacity(0.6)는 컴포넌트 인라인. */
+  .mute-btn        { --mute-icon: var(--color-ink-soft); }
+  .mute-btn:hover  { --mute-icon: var(--color-accent-stable); }
+  .mute-btn[data-muted="true"] { --mute-icon: var(--color-ink-faint); }
+
+  /* prefers-reduced-motion: 움직임(스크롤·전환)만 끈다. 색온도는 모션 아님이라 유지. */
+  @media (prefers-reduced-motion: reduce) {
+    .scene-layer       { animation: none; }
+    .ground-scroll-line { animation: none; }
+  }
 }
