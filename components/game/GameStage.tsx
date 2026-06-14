@@ -49,7 +49,7 @@ export function useGameStage(): GameStageContextValue {
 const PROLOGUE_SCREENS: Screen[] = ['title', 'tutorial', 'findPace'];
 
 /** clear 이후 화면은 진행도와 무관하게 space로 고정한다. */
-const POST_CLEAR_SCREENS: Screen[] = ['clear', 'continueOrEnd', 'ending'];
+const POST_CLEAR_SCREENS: Screen[] = ['clear', 'landscape', 'crossroad'];
 
 const reducedMotion =
   typeof window !== 'undefined' &&
@@ -61,6 +61,11 @@ interface GameStageProps {
   ambient?:      boolean;
   /** 확정된 내 구간 — Main Play에서 안정 게이지 계산용. */
   band?:         Band | null;
+  /**
+   * 클리어 도달 후 true. "계속 달리기"로 Main Play에 복귀해도 클리어 상태(우주 배경 + 평온)를
+   * 유지한다 — 화면이 POST_CLEAR가 아니어도 씬을 space로 고정하고 band를 비활성(평온)으로 둔다.
+   */
+  cleared?:      boolean;
   /** 안정 게이지 가득 이벤트 (2C·Phase 3 소비). */
   onStabilized?: () => void;
   /** 게임 뷰포트(main)에 전달할 ref — Phase 6 엔딩 캡처용. */
@@ -68,12 +73,16 @@ interface GameStageProps {
   children?:     ReactNode;
 }
 
-export default function GameStage({ screen, ambient = false, band = null, onStabilized, viewportRef, children }: GameStageProps) {
+export default function GameStage({ screen, ambient = false, band = null, cleared = false, onStabilized, viewportRef, children }: GameStageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // 클리어 이후(clear/continueOrEnd/ending)는 평온 — 씬을 space로 고정하듯 --stability도 1로 둬
-  // 배너 소란(loud)·씬 색온도 변화를 끈다. band=null이면 루프가 rawSignal=1로 유지(Phase 6).
-  const loopBand = POST_CLEAR_SCREENS.includes(screen) ? null : band;
+  // 클리어 상태 — 클리어 이후 화면(clear/landscape/crossroad)이거나, "계속 달리기"로 복귀한
+  // 자유주행(cleared && mainPlay)을 함께 포괄한다. 둘 다 우주 배경 + 평온(band 비활성)을 유지.
+  const atClearState = cleared || POST_CLEAR_SCREENS.includes(screen);
+
+  // 클리어 상태는 평온 — 씬을 space로 고정하듯 --stability도 1로 둬 배너 소란(loud)·씬 색온도
+  // 변화를 끈다. band=null이면 루프가 rawSignal=1로 유지(Phase 6).
+  const loopBand = atClearState ? null : band;
 
   // 루프: --stability를 rootRef(셸 그리드)에 write. bgRef는 넘기지 않음 — 지면 스크롤은 Background가 CSS로.
   const { snapshot, resetAnchor, resetStability, setPresenceActive } = useGameLoop({
@@ -91,7 +100,7 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
   const gaugeRatio   = Math.min(1, snapshot.stabilityProgress / STABILITY_GAUGE_FULL);
   const gameProgress = Math.min(1, (snapshot.stabilizations + gaugeRatio) / REQUIRED_STABILIZATIONS);
   const scene: Scene =
-    POST_CLEAR_SCREENS.includes(screen) ? 'space'
+    atClearState ? 'space'
     : PROLOGUE_SCREENS.includes(screen) ? 'road'
     : playProgressToScene(gameProgress);
 

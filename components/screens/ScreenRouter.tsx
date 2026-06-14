@@ -13,8 +13,8 @@ import JourneyStartScreen  from './JourneyStartScreen';
 import MainPlayScreen      from './MainPlayScreen';
 import ReturnScreen        from './ReturnScreen';
 import ClearScreen         from './ClearScreen';
-import ContinueOrEndScreen from './ContinueOrEndScreen';
-import EndingScreen        from './EndingScreen';
+import LandscapeScreen     from './LandscapeScreen';
+import CrossroadScreen     from './CrossroadScreen';
 
 const noop = () => {};
 
@@ -28,12 +28,14 @@ interface ScreenRouterProps {
   onEncounterStabilized?:  (count: number) => void;
   onReturnDone?:           () => void;
   onClearDone?:            () => void;
+  onLandscapeDone?:        () => void;
   onContinue?:             () => void;
-  onEnd?:                  () => void;
   onSave?:                 () => void;
   onRestart?:              () => void;
-  /** Phase 6 — 엔딩 엽서에 표시할 캡처 이미지(null이면 단색 fallback). */
+  /** Landscape 엽서에 표시할 캡처 이미지(null이면 단색 fallback). */
   capturedImage?:          string | null;
+  /** 클리어 후 "계속 달리기"로 복귀한 자유주행 — MainPlay 인카운터 미예약·UI 비움. */
+  freeRun?:                boolean;
 }
 
 export default function ScreenRouter({
@@ -45,11 +47,12 @@ export default function ScreenRouter({
   onEncounterStabilized  = noop,
   onReturnDone           = noop,
   onClearDone            = noop,
+  onLandscapeDone        = noop,
   onContinue             = noop,
-  onEnd                  = noop,
   onSave                 = noop,
   onRestart              = noop,
   capturedImage          = null,
+  freeRun                = false,
 }: ScreenRouterProps) {
   return (
     <>
@@ -65,13 +68,14 @@ export default function ScreenRouter({
           onCleared={onCleared}
           onEncounterStabilized={onEncounterStabilized}
           dimmed={screen === 'return'}
+          freeRun={freeRun}
         />
       )}
 
-      {screen === 'return'        && <ReturnScreen index={returnIndex} onDone={onReturnDone} />}
-      {screen === 'clear'         && <ClearScreen onDone={onClearDone} />}
-      {screen === 'continueOrEnd' && <ContinueOrEndScreen onContinue={onContinue} onEnd={onEnd} />}
-      {screen === 'ending'        && <EndingScreen onSave={onSave} onRestart={onRestart} capturedImage={capturedImage} />}
+      {screen === 'return'    && <ReturnScreen index={returnIndex} onDone={onReturnDone} />}
+      {screen === 'clear'     && <ClearScreen onDone={onClearDone} />}
+      {screen === 'landscape' && <LandscapeScreen onSave={onSave} onDone={onLandscapeDone} capturedImage={capturedImage} />}
+      {screen === 'crossroad' && <CrossroadScreen onContinue={onContinue} onRestart={onRestart} />}
     </>
   );
 }

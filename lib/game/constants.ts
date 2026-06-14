@@ -195,8 +195,11 @@ export const GAME_CONSTANTS = {
   /** Return 회차당 dwell 증가 (ms) — 혼란→체화로 갈수록 길게(차분). */
   RETURN_DWELL_STEP_MS: 700,
 
-  /** Clear 노출 후 ContinueOrEnd 자동 전환까지 (ms). */
+  /** Clear 노출 후 Landscape 자동 전환까지 (ms). */
   CLEAR_DWELL_MS: 4200,
+
+  /** Landscape에서 "내 풍경 저장하기" → "저장됐어요" 한 박자 후 Crossroad 전환까지 (ms). */
+  LANDSCAPE_SAVED_DWELL_MS: 1000,
 
   // ── Phase 4A: 상태 색 (연속 안정도 신호) ───────────────────────────
 
