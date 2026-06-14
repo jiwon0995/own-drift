@@ -194,6 +194,13 @@
     letter-spacing: 1px;
   }
 
+  /* ── 음소거 버튼 (Phase 5) ──
+     아이콘은 box-shadow 픽셀이 --mute-icon을 참조(MuteButton). 색만 여기서 상태별로 준다:
+     기본 ink-soft · hover accent · muted ink-faint. opacity(0.6)는 컴포넌트 인라인. */
+  .mute-btn        { --mute-icon: var(--color-ink-soft); }
+  .mute-btn:hover  { --mute-icon: var(--color-accent-stable); }
+  .mute-btn[data-muted="true"] { --mute-icon: var(--color-ink-faint); }
+
   /* prefers-reduced-motion: 움직임(스크롤·전환)만 끈다. blur/색은 모션 아님이라 유지. */
   @media (prefers-reduced-motion: reduce) {
     .scene-layer       { animation: none; }
