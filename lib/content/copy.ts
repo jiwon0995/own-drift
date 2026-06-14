@@ -4,7 +4,7 @@ import type { Screen } from '@/lib/game/types';
 type BasicScreenCopy = { bubble: string };
 
 type ScreenCopy = Record<
-  Exclude<Screen, 'tutorial' | 'journeyStart' | 'mainPlay' | 'return' | 'clear' | 'continueOrEnd' | 'ending'>,
+  Exclude<Screen, 'tutorial' | 'journeyStart' | 'mainPlay' | 'return' | 'clear' | 'landscape' | 'crossroad'>,
   BasicScreenCopy
 > & {
   title: BasicScreenCopy & { startButton: string };
@@ -34,17 +34,25 @@ export const JOURNEY_START_PARAGRAPHS = [
 /** Tutorial 서브 스텝별 말풍선 문구. */
 export type TutorialStep = 'fast' | 'slow' | 'done';
 
-export const TUTORIAL_STEP_COPY: Record<TutorialStep, { bubble: string }> = {
-  fast: {
-    bubble: '조금 빨라져볼까요?\nSpacebar 키를 눌러보세요.',
-  },
-  slow: {
-    bubble: '이번엔 천천히 가볼까요?\nSpacebar에서 손을 떼보세요.',
-  },
-  done: {
-    bubble: '좋아요.\n속도는 언제든 바뀔 수 있어요.',
-  },
-};
+/** 입력 디바이스별 조작 안내 — 데스크톱(키보드) / 모바일(터치). */
+const TUTORIAL_ACTION = {
+  keyboard: { press: 'Spacebar 키를 눌러보세요.', release: 'Spacebar에서 손을 떼보세요.' },
+  touch:    { press: '화면을 길게 눌러보세요.',     release: '화면에서 손을 떼보세요.' },
+} as const;
+
+const tutorialSteps = (a: { press: string; release: string }): Record<TutorialStep, { bubble: string }> => ({
+  fast: { bubble: `조금 빨라져볼까요?\n${a.press}` },
+  slow: { bubble: `이번엔 천천히 가볼까요?\n${a.release}` },
+  done: { bubble: '좋아요.\n속도는 언제든 바뀔 수 있어요.' },
+});
+
+/** 데스크톱(키보드) 기본 문구. dev 디버그가 직접 참조. */
+export const TUTORIAL_STEP_COPY = tutorialSteps(TUTORIAL_ACTION.keyboard);
+
+/** 디바이스 인식 튜토리얼 문구 — touch=true면 '화면을 눌러보세요'로 교체. */
+export function tutorialStepCopy(touch: boolean): Record<TutorialStep, { bubble: string }> {
+  return touch ? tutorialSteps(TUTORIAL_ACTION.touch) : TUTORIAL_STEP_COPY;
+}
 
 /** 게이지 라벨 — Find Pace(안착) / Main Play(안정) */
 export const GAUGE_COPY = {
@@ -77,27 +85,30 @@ export const RETURN_COPY = [
   '이제 다시 찾을 수 있어요.\n당신의 속도는 당신 안에 있어요.',
 ] as const;
 
-/** Clear — 승리 아닌 인정. 점수·랭킹 없음. */
+/** Clear — 승리 아닌 인정. 점수·랭킹 없음. 진입 시 풍경 캡처 1회 후 Landscape로. */
 export const CLEAR_COPY = {
   main: '당신의 속도를 찾았습니다.',
-  sub:  '이곳에는 피니시가 없습니다.\n계속 달려도 되고, 여기서 멈춰도 괜찮아요.',
+  sub:  '이곳에는 피니시가 없습니다.\n도착이 아니라, 당신의 속도를 만났어요.',
 } as const;
 
-/** Continue or End — 두 선택 동등 무게. 종료는 포기가 아님. */
-export const CONTINUE_OR_END_COPY = {
-  prompt:   '계속 달려도 되고,\n여기서 멈춰도 괜찮아요.',
-  note:     '어느 쪽도 늦지 않습니다.',
+/**
+ * Landscape — 당신의 풍경(엽서). 클리어한 모든 플레이어가 본다. 순위·기록·수치 없음.
+ * 두 버튼은 같은 무게이고 다음 화면(Crossroad)도 동일 — "내 풍경 저장하기"만 download를 발화한다.
+ */
+export const LANDSCAPE_COPY = {
+  main:  '당신의 풍경이 도착했어요.',
+  sub:   '빠르거나 느린 기록이 아니라,\n당신이 지나온 리듬입니다.',
+  save:  '내 풍경 저장하기',
+  keep:  '기억으로 간직하기',
+  saved: '저장됐어요',
+} as const;
+
+/** Crossroad — 갈림길. 두 선택 동등 무게, 어느 쪽도 강한 CTA로 보이지 않게. */
+export const CROSSROAD_COPY = {
+  text:     '길은 여기서 끝나지 않아요.\n계속 이 속도로 가도, 처음부터 다시 내딛어도 괜찮아요.',
+  sub:      '지금의 선택도 당신의 속도입니다.',
   continue: '계속 달리기',
-  end:      '오늘은 여기까지',
-} as const;
-
-/** Ending — 당신의 풍경. 순위·기록·수치 없음. */
-export const ENDING_COPY = {
-  main:        '당신의 풍경이 도착했어요.',
-  sub:         '빠르거나 느린 기록이 아니라,\n당신이 지나온 리듬입니다.',
-  placeholder: '당신의 풍경',
-  save:        '내 풍경 저장하기',
-  restart:     '다시 걸어보기',
+  restart:  '다시 내딛기',
 } as const;
 
 /**

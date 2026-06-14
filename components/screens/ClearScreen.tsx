@@ -5,7 +5,8 @@
  *
  * 승리가 아니라 *인정*의 순간. 점수판·랭킹·기록·"Clear/Win" 표현 없음.
  * 배너 스왑(일반→회사)은 Phase 4 — 지금은 idle 유지(placeholder).
- * 일정 시간(CLEAR_DWELL_MS) 후 ContinueOrEnd로 자동 전환.
+ * 풍경 캡처는 이 화면 진입 시 상위(app/page)에서 1회 수행하고, 일정 시간(CLEAR_DWELL_MS) 후
+ * Landscape로 자동 전환한다(클리어한 모든 플레이어가 풍경을 받는다).
  */
 
 import { useEffect, useRef } from 'react';

@@ -28,8 +28,11 @@ export default function Shell({ leftBanner, rightBanner, rootRef, viewportRef, c
         {/* 왼쪽 배너 슬롯 — SideBanner가 배경·레이아웃을 직접 채운다 */}
         <aside className="hidden md:block">{leftBanner}</aside>
 
-        {/* 게임 뷰포트 */}
-        <main ref={viewportRef} className="scanline-vignette relative overflow-hidden h-full">
+        {/*
+          게임 뷰포트. touch-none = 더블탭 줌·팬 차단(빠른 연타 시 확대 방지 + 홀드 중 손가락
+          드리프트로 pointercancel 나는 것 방지). select-none = 길게 눌러도 텍스트 선택 안 됨.
+        */}
+        <main ref={viewportRef} className="scanline-vignette relative overflow-hidden h-full touch-none select-none">
           {children}
         </main>
 

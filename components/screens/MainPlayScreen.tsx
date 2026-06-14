@@ -48,9 +48,14 @@ interface MainPlayScreenProps {
   onEncounterStabilized?: (count: number) => void;
   /** Return 오버레이가 위에 떠 있는 동안 본 화면 UI를 숨김(머신은 계속 구동). */
   dimmed?: boolean;
+  /**
+   * 클리어 후 "계속 달리기"로 복귀한 자유주행. 새 인카운터를 예약하지 않고(다른-존재 사이클 강제 X)
+   * UI도 비운다 — 우주 배경 위 러너만 남는 평온 주행. 종료는 탭 닫기.
+   */
+  freeRun?: boolean;
 }
 
-export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimmed = false }: MainPlayScreenProps) {
+export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimmed = false, freeRun = false }: MainPlayScreenProps) {
   const { snapshot, resetStability, setPresenceActive } = useGameStage();
   const [status,      setStatus]      = useState<Status>(ENTRY);
   const [presence,    setPresence]    = useState<PresencePhase>('hidden');
@@ -115,13 +120,13 @@ export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimme
   // (= 메인플레이 화면으로 전환된 시점부터 지연을 잰다). return(dimmed) 동안은 대기하고,
   // 필요 횟수를 채우면 예약하지 않는다(페이지가 Return 후 Clear로 전환).
   useEffect(() => {
-    if (dimmed || countRef.current >= REQUIRED_STABILIZATIONS) return;
+    if (dimmed || freeRun || countRef.current >= REQUIRED_STABILIZATIONS) return;
     apiRef.current.resetStability();
     committedAtRef.current = performance.now();
     const delay = countRef.current === 0 ? FIRST_ENCOUNTER_DELAY : INTER_ENCOUNTER_CALM;
     const id = setTimeout(startEncounter, delay * 1000);
     return () => clearTimeout(id);
-  }, [dimmed, startEncounter]);
+  }, [dimmed, freeRun, startEncounter]);
 
   // 스냅샷 갱신마다: 안정 이벤트 감지 + 상태 문구(디바운스)
   useEffect(() => {
@@ -164,8 +169,9 @@ export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimme
     });
   }, [snapshot, onStabilization]);
 
-  // Return 오버레이가 위에 떠 있는 동안: 본 UI 숨김 (러너·배경은 GameStage라 그대로 유지)
-  if (dimmed) return <div className="absolute inset-0 pointer-events-none" aria-hidden />;
+  // Return 오버레이가 떠 있거나(dimmed) 클리어 후 자유주행(freeRun)이면 본 UI 숨김.
+  // 러너·배경은 GameStage라 그대로 유지 — freeRun은 우주 배경 위 러너만 남는 평온 주행.
+  if (dimmed || freeRun) return <div className="absolute inset-0 pointer-events-none" aria-hidden />;
 
   return (
     <div className="absolute inset-0 pointer-events-none">
