@@ -25,9 +25,9 @@ import SpeechBubble from '@/components/game/SpeechBubble';
 
 const TYPE_SPEED_MS     = 55;    // 글자당 타이핑 간격
 const PARA_PAUSE_MS     = 400;   // 문단 완료 후 다음 문단까지 pause
-const FINAL_HOLD_MS     = 600;   // 마지막 문단 완료 후 슬라이드 시작까지
-const SLIDE_MS          = 1100;  // 슬라이드 전환 시간
-const SLIDE_FALLBACK_MS = 1300;  // transitionend 누락(hidden 탭) 대비 폴백
+const FINAL_HOLD_MS     = 1800;  // 마지막 문단 완료 후 슬라이드 시작까지 — 마지막 문장을 음미할 여유
+const SLIDE_MS          = 1500;  // 슬라이드 전환 시간 — 천천히 밀려들어와 부드럽게 잇는다
+const SLIDE_FALLBACK_MS = 1700;  // transitionend 누락(hidden 탭) 대비 폴백 (SLIDE_MS보다 약간 길게)
 const NARRATIVE_SCROLL  = 0.5;   // journeyStart 지면 스크롤(전진감) — 게이지 무관 고정값
 const BUBBLE_TOP        = 200;   // 말풍선 세로 위치(game-screens.html bubbleTop)
 
