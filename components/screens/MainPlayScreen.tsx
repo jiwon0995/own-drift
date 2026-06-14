@@ -3,10 +3,11 @@
 /**
  * Main Play — 평온 구간 + 다른 존재 인카운터 (Phase 2B + 2C).
  *
- * 인카운터 루프:
- *   평온 → FIRST_ENCOUNTER_DELAY 후 다른 존재 등장(끌어당김 on)
- *   → 구간 유지로 2B 안정 게이지 충전 → 가득(loop가 stabilizations++) → 존재 페이드 + count++
- *   → count<3: INTER_ENCOUNTER_CALM 후 다음 등장 / count==3: onCleared
+ * 인카운터 루프(메인플레이는 return 중에도 마운트 유지, dimmed로만 가림):
+ *   메인플레이 활성(dimmed=false) 진입 → FIRST_ENCOUNTER_DELAY 후 다른 존재 등장(끌어당김 on)
+ *   → 구간 유지로 2B 안정 게이지 충전 → 가득(loop가 stabilizations++) → 존재 페이드 + count++ → Return(dimmed)
+ *   → Return 닫고 복귀(dimmed=false) → INTER_ENCOUNTER_CALM 후 다음 등장 / 3회 달성 시 페이지가 Clear로 전환
+ *   ⇒ 첫 등장도, 이후 등장도 "각 화면(메인플레이)으로 전환된 시점"부터 같은 지연 뒤 나타난다.
  *
  * 끌어당김은 약한 드리프트(루프의 applyPresencePull) — 릴리스로 상쇄 가능, 실패 없음.
  * 쫓아가도 구간 이탈로 게이지가 멈출 뿐 보상/처벌 없음. 상태 문구는 디바운스로 차분.
@@ -84,38 +85,43 @@ export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimme
     announceUntilRef.current = performance.now() + STATUS_DEBOUNCE_MS;
   }, []);
 
-  // 안정 1회 — 끌어당김 off, 존재 페이드, count++ → 다음 등장 또는 클리어
+  // 안정 1회 — 끌어당김 off, 존재 페이드아웃, count++ 통지(→ Phase 3 Return).
+  // 다음 등장은 return이 닫혀 메인플레이로 복귀할 때(dimmed=false) 아래 effect가 예약한다.
   const onStabilization = useCallback(() => {
     apiRef.current.setPresenceActive(false);
     presenceRef.current = 'leaving';
     setPresence('leaving');
     countRef.current += 1;
-    apiRef.current.onEncounterStabilized?.(countRef.current); // 회차 통지 → Phase 3 Return
-    const fadeId = setTimeout(() => {
+    apiRef.current.onEncounterStabilized?.(countRef.current);                    // 회차 통지 → Phase 3 Return
+    if (countRef.current >= REQUIRED_STABILIZATIONS) apiRef.current.onCleared();  // 2C 저수준 완료 이벤트
+    const fadeId = setTimeout(() => {                                             // 페이드 끝나면 숨김(복귀 전 정리)
       presenceRef.current = 'hidden';
       setPresence('hidden');
-      if (countRef.current >= REQUIRED_STABILIZATIONS) {
-        apiRef.current.onCleared();          // 3회 → 클리어 이벤트 (Phase 3)
-      } else {
-        const nextId = setTimeout(startEncounter, INTER_ENCOUNTER_CALM * 1000);
-        timersRef.current.push(nextId);      // 평온 후 다음 등장
-      }
     }, PRESENCE_FADE_MS);
     timersRef.current.push(fadeId);
-  }, [startEncounter]);
+  }, []);
 
-  // 마운트: 게이지 리셋 + 진입 문구 유지 + 첫 등장 예약
+  // 언마운트 정리 — 남은 타이머 해제 + 끌어당김 off.
   useEffect(() => {
-    apiRef.current.resetStability();
-    committedAtRef.current = performance.now();
-    const firstId = setTimeout(startEncounter, FIRST_ENCOUNTER_DELAY * 1000);
-    timersRef.current.push(firstId);
     const timers = timersRef.current;
     return () => {
       timers.forEach(clearTimeout);
       apiRef.current.setPresenceActive(false);
     };
-  }, [startEncounter]);
+  }, []);
+
+  // 다음(첫) 등장 예약 — 메인플레이 활성(dimmed=false)으로 진입/복귀할 때마다.
+  // 첫 진입(count 0)은 FIRST_ENCOUNTER_DELAY, 이후 복귀는 INTER_ENCOUNTER_CALM 뒤 등장한다
+  // (= 메인플레이 화면으로 전환된 시점부터 지연을 잰다). return(dimmed) 동안은 대기하고,
+  // 필요 횟수를 채우면 예약하지 않는다(페이지가 Return 후 Clear로 전환).
+  useEffect(() => {
+    if (dimmed || countRef.current >= REQUIRED_STABILIZATIONS) return;
+    apiRef.current.resetStability();
+    committedAtRef.current = performance.now();
+    const delay = countRef.current === 0 ? FIRST_ENCOUNTER_DELAY : INTER_ENCOUNTER_CALM;
+    const id = setTimeout(startEncounter, delay * 1000);
+    return () => clearTimeout(id);
+  }, [dimmed, startEncounter]);
 
   // 스냅샷 갱신마다: 안정 이벤트 감지 + 상태 문구(디바운스)
   useEffect(() => {

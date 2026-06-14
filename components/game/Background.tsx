@@ -175,8 +175,8 @@ export function SceneLayer({ scene, scrollSpeed }: { scene: Scene; scrollSpeed: 
       {/* 나무 (highway) — 몸통 + 수관 */}
       {scene === 'highway' && HW_TREES.map((t, i) => (
         <Fragment key={`tree-${i}`}>
-          <div className="absolute" style={{ bottom: 90, left: `${t.x}%`, width: 8, height: t.th, background: '#1a2420', zIndex: 3 }} />
-          <div className="absolute" style={{ bottom: 90 + t.th - 6, left: `calc(${t.x}% - 11px)`, width: 30, height: 30, borderRadius: '50% 50% 45% 45%', background: '#1f2e26', zIndex: 3 }} />
+          <div className="absolute" style={{ bottom: 90, left: `${t.x}%`, width: 8, height: t.th, background: '#3a4a40', zIndex: 3 }} />
+          <div className="absolute" style={{ bottom: 90 + t.th - 6, left: `calc(${t.x}% - 11px)`, width: 30, height: 30, borderRadius: '50% 50% 45% 45%', background: '#4e6e5c', zIndex: 3 }} />
         </Fragment>
       ))}
 

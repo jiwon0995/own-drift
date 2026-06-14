@@ -157,10 +157,10 @@ export const GAME_CONSTANTS = {
   // ── Phase 2C: 다른 존재 (외부 압박) ────────────────────────────────
 
   /** Main Play 진입 후 첫 다른 존재 등장까지 평온 시간 (초). */
-  FIRST_ENCOUNTER_DELAY: 6,
+  FIRST_ENCOUNTER_DELAY: 10,
 
-  /** 인카운터 사이 평온 복귀 시간 (초). */
-  INTER_ENCOUNTER_CALM: 4,
+  /** Return 닫고 메인플레이로 복귀한 뒤 다음 등장까지 평온 시간 (초). 첫 등장(FIRST_ENCOUNTER_DELAY)과 맞춰 둠. */
+  INTER_ENCOUNTER_CALM: 10,
 
   /**
    * 다른 존재가 내 페이스보다 얼마나 빠른지 (units/s 상대 리드).
@@ -176,6 +176,13 @@ export const GAME_CONSTANTS = {
 
   /** OtherPresence 등장(접근) 애니메이션 시간 (ms). */
   PRESENCE_APPROACH_MS: 2600,
+
+  /**
+   * OtherPresence 등장 페이드인 시간 (ms).
+   * 접근 이동(PRESENCE_APPROACH_MS)보다 짧게 둬, 아직 멀찍이 뒤에 있을 때 먼저 보이고
+   * 그 뒤로 플레이어를 쫓아오게 한다 — 갑자기 옆에 나타나는 느낌 방지.
+   */
+  PRESENCE_FADEIN_MS: 800,
 
   /** OtherPresence 페이드(소멸) 시간 (ms). */
   PRESENCE_FADE_MS: 700,
@@ -223,13 +230,10 @@ export const GAME_CONSTANTS = {
    */
   SCENE_CROSSFADE_MS: 800,
 
-  // ── Phase 4B: 화면 선명도·흔들림 (불안정 반응) ──────────────────────
+  // ── Phase 4B: 화면 선명도 (불안정 반응) ────────────────────────────
 
   /** --stability=0(구간 이탈)일 때 씬 레이어 최대 blur(px). 안정=1이면 0(선명). */
   VIEWPORT_BLUR_MAX_PX: 1.6,
-
-  /** --stability=0일 때 씬 흔들림 최대 진폭(px). prefers-reduced-motion이면 무시. */
-  VIEWPORT_SHAKE_MAX_PX: 1.5,
 
   // ── Phase 4C: 지원회사 배너 (이스터에그) ────────────────────────────
 

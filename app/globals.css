@@ -30,7 +30,7 @@
 
   /* character */
   --color-fig-player: #ffb257;
-  --color-fig-other:  #6b5a4e;
+  --color-fig-other:  #ffffff;
 
   /* type scale */
   --text-title:   46px;
@@ -147,22 +147,15 @@
   }
   @keyframes ground-scroll { to { background-position: -24px 0; } }
 
-  /* ── 씬 레이어 선명도·색온도·흔들림 (Phase 4B) ──
-     --stability(이탈=0)에 반응: 흐려지고·식고·미세하게 떨린다. 안정=1이면 원본.
+  /* ── 씬 레이어 선명도·색온도 (Phase 4B) ──
+     --stability(이탈=0)에 반응: 흐려지고·식는다. 안정=1이면 원본.
      러너·UI는 이 래퍼 밖이라 또렷하게 유지 — "세상은 흔들려도 나는 나." */
   .scene-fx {
     filter:
       blur(calc((1 - var(--stability)) * var(--viewport-blur-max, 1.6px)))
       saturate(calc(0.8 + 0.2 * var(--stability)))
       brightness(calc(0.92 + 0.08 * var(--stability)));
-    --shake-amp: calc((1 - var(--stability)) * var(--viewport-shake-max, 1.5px));
-    animation: viewport-shake 0.16s steps(2, jump-none) infinite;
-    will-change: transform, filter;
-  }
-  @keyframes viewport-shake {
-    0%, 100% { transform: translate(0, 0); }
-    25%      { transform: translate(calc(var(--shake-amp) * -1), var(--shake-amp)); }
-    75%      { transform: translate(var(--shake-amp), calc(var(--shake-amp) * -1)); }
+    will-change: filter;
   }
 
   /* ── 양옆 배너 (Phase 4B/4C) ──
@@ -201,11 +194,10 @@
     letter-spacing: 1px;
   }
 
-  /* prefers-reduced-motion: 움직임(스크롤·흔들림·전환)만 끈다. blur/색은 모션 아님이라 유지. */
+  /* prefers-reduced-motion: 움직임(스크롤·전환)만 끈다. blur/색은 모션 아님이라 유지. */
   @media (prefers-reduced-motion: reduce) {
     .scene-layer       { animation: none; }
     .ground-scroll-line { animation: none; }
-    .scene-fx          { animation: none; }
     .side-banner.side-banner--company { animation: none; }
   }
 }

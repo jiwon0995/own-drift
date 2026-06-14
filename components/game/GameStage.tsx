@@ -25,7 +25,7 @@ import PixelRunner         from './PixelRunner';
 
 const {
   MIN_SPEED, MAX_SPEED, REQUIRED_STABILIZATIONS, STABILITY_GAUGE_FULL,
-  SCROLL_SPEED_STEPS, BANNER_SWAP_DELAY_MS, VIEWPORT_BLUR_MAX_PX, VIEWPORT_SHAKE_MAX_PX,
+  SCROLL_SPEED_STEPS, BANNER_SWAP_DELAY_MS, VIEWPORT_BLUR_MAX_PX,
 } = GAME_CONSTANTS;
 
 interface GameStageContextValue {
@@ -107,11 +107,10 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
   }, [screen, cleared]);
   const bannerVariant: BannerVariant = cleared ? 'company' : 'idle';
 
-  // .scene-fx의 blur/흔들림 최대치를 상수에서 CSS 변수로 주입(단일 출처).
+  // .scene-fx의 blur 최대치를 상수에서 CSS 변수로 주입(단일 출처).
   const sceneFxStyle = {
-    inset:                  -4,                 // 흔들림이 가장자리(셸 배경)를 드러내지 않게 살짝 확장
-    '--viewport-blur-max':  `${VIEWPORT_BLUR_MAX_PX}px`,
-    '--viewport-shake-max': `${VIEWPORT_SHAKE_MAX_PX}px`,
+    inset:                 -4,                  // blur 가장자리 투명도가 셸 배경을 드러내지 않게 살짝 확장
+    '--viewport-blur-max': `${VIEWPORT_BLUR_MAX_PX}px`,
   } as React.CSSProperties;
 
   return (
