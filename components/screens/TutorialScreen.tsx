@@ -12,8 +12,9 @@
 
 import { useEffect, useReducer, useRef } from 'react';
 import { GAME_CONSTANTS } from '@/lib/game/constants';
-import { TUTORIAL_STEP_COPY, type TutorialStep } from '@/lib/content/copy';
+import { tutorialStepCopy, type TutorialStep } from '@/lib/content/copy';
 import { useGameStage } from '@/components/game/GameStage';
+import { useIsTouch } from '@/hooks/useIsTouch';
 import SpeechBubble from '@/components/game/SpeechBubble';
 
 const {
@@ -42,6 +43,8 @@ function reducer(state: TutState, action: TutAction): TutState {
 // ── 컴포넌트 ────────────────────────────────────────────────────────────
 export default function TutorialScreen({ onAdvance }: { onAdvance: () => void }) {
   const { snapshot } = useGameStage();
+  const touch = useIsTouch();
+  const stepCopy = tutorialStepCopy(touch);
   const [{ step }, dispatch] = useReducer(reducer, { step: 'fast' });
 
   const accRef     = useRef(0);
@@ -91,7 +94,7 @@ export default function TutorialScreen({ onAdvance }: { onAdvance: () => void })
         className="absolute left-0 right-0 flex justify-center px-8"
         style={{ top: 260, zIndex: 10 }}
       >
-        <SpeechBubble key={step} text={TUTORIAL_STEP_COPY[step].bubble} speed={48} />
+        <SpeechBubble key={`${step}-${touch}`} text={stepCopy[step].bubble} speed={48} />
       </div>
     </div>
   );
