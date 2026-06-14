@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
-const title = 'Own Drift — 나만의 속도를 찾는 감성 웹 게임';
+const title = 'Own Drift';
 // 검색엔진(구글 등) 노출용 — 키워드가 풍부한 긴 설명
 const description = '혼란 속에서 자신만의 리듬을 되찾는 픽셀 아트 감성 웹게임. 인디 힐링 게임으로 \'내 속도\'를 찾는 짧은 여정을 경험하세요.';
 // 공유 카드(카카오톡·X) 미리보기용 — 짧고 감성적인 한 줄
