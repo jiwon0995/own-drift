@@ -13,7 +13,7 @@
  * scene/scrollSpeed/bannerVariant는 이 컴포넌트가 snapshot+screen에서 파생한다.
  */
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { useGameLoop }      from '@/hooks/useGameLoop';
 import { useAudio }         from '@/hooks/useAudio';
 import { GAME_CONSTANTS }   from '@/lib/game/constants';
@@ -27,7 +27,7 @@ import PixelRunner         from './PixelRunner';
 
 const {
   MIN_SPEED, MAX_SPEED, REQUIRED_STABILIZATIONS, STABILITY_GAUGE_FULL,
-  SCROLL_SPEED_STEPS, BANNER_SWAP_DELAY_MS, VIEWPORT_BLUR_MAX_PX,
+  SCROLL_SPEED_STEPS,
 } = GAME_CONSTANTS;
 
 interface GameStageContextValue {
@@ -44,8 +44,6 @@ export function useGameStage(): GameStageContextValue {
   if (!ctx) throw new Error('useGameStage must be used inside <GameStage>');
   return ctx;
 }
-
-type BannerVariant = 'idle' | 'loud' | 'company';
 
 /** 프롤로그 화면 — road 고정(학습 구간). 본편(journeyStart~)은 도시 씬으로 진행한다. */
 const PROLOGUE_SCREENS: Screen[] = ['title', 'tutorial', 'findPace'];
@@ -102,34 +100,15 @@ export default function GameStage({ screen, ambient = false, band = null, onStab
   const footSpeed = Math.max(0, Math.min(1, (snapshot.speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)));
   const { isMuted, toggleMute } = useAudio({ scene, speed: footSpeed });
 
-  // ── 4C 배너 이스터에그 ──
-  // clear 진입 → BANNER_SWAP_DELAY_MS 후 company(cleared=true). 단방향 — title 복귀로만 해제.
-  // idle↔loud '소란'의 *연속 배경*은 --banner-soran(CSS)이 구동 — 여기 React 상태는 company 스왑만.
-  const [cleared, setCleared] = useState(false);
-  // 새 게임(title 복귀) 시 회사 배너 해제 — prop 변화에 따른 state 조정(render 중, React 권장 패턴).
-  if (screen === 'title' && cleared) setCleared(false);
-  useEffect(() => {
-    if (screen !== 'clear' || cleared) return;          // clear 진입에서만, 1회(단방향)
-    const t = setTimeout(() => setCleared(true), BANNER_SWAP_DELAY_MS);
-    return () => clearTimeout(t);
-  }, [screen, cleared]);
-  const bannerVariant: BannerVariant = cleared ? 'company' : 'idle';
-
-  // .scene-fx의 blur 최대치를 상수에서 CSS 변수로 주입(단일 출처).
-  const sceneFxStyle = {
-    inset:                 -4,                  // blur 가장자리 투명도가 셸 배경을 드러내지 않게 살짝 확장
-    '--viewport-blur-max': `${VIEWPORT_BLUR_MAX_PX}px`,
-  } as React.CSSProperties;
-
   return (
     <GameStageContext.Provider value={{ snapshot, resetAnchor, resetStability, setPresenceActive }}>
       <Shell
         rootRef={rootRef}
-        leftBanner={<SideBanner variant={bannerVariant} side="left" />}
-        rightBanner={<SideBanner variant={bannerVariant} side="right" />}
+        leftBanner={<SideBanner side="left" />}
+        rightBanner={<SideBanner side="right" />}
       >
-        {/* 씬 레이어 — blur·색온도·흔들림은 여기에만 적용(러너·UI는 또렷 유지) */}
-        <div className="scene-fx absolute" style={sceneFxStyle}>
+        {/* 씬 레이어 — 색온도는 여기에만 적용(러너·UI는 또렷 유지) */}
+        <div className="scene-fx absolute inset-0">
           <Background scene={scene} scrollSpeed={scrollSpeed} />
         </div>
 

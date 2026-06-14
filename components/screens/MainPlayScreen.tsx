@@ -192,6 +192,7 @@ export default function MainPlayScreen({ onCleared, onEncounterStabilized, dimme
           progress={snapshot.stabilityProgress}
           full={STABILITY_GAUGE_FULL}
           label={GAUGE_COPY.stabilizing}
+          width={360}
         />
       </div>
 

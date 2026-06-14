@@ -139,8 +139,8 @@ export const GAME_CONSTANTS = {
 
   // ── Phase 2B: 안정 게이지 (Main Play) ──────────────────────────────
 
-  /** 내 구간(myPace±tol) 안에 있을 때 안정 게이지 충전 속도 (단위/s). FULL/이 값 = 채우는 시간. */
-  STABILITY_FILL_RATE: 0.2,
+  /** 내 구간(myPace±tol) 안에 있을 때 안정 게이지 충전 속도 (단위/s). FULL/이 값 = 채우는 시간 → 1.0/0.1 = 10초. */
+  STABILITY_FILL_RATE: 0.1,
 
   /**
    * 구간 이탈 시 되돌림 속도 (단위/s). 0 = 순수 멈춤(되돌림 없음).
@@ -229,19 +229,6 @@ export const GAME_CONSTANTS = {
    * 같은 값을 쓰도록 단일 출처로 둔다 — Background가 inline animationDuration으로 주입.
    */
   SCENE_CROSSFADE_MS: 800,
-
-  // ── Phase 4B: 화면 선명도 (불안정 반응) ────────────────────────────
-
-  /** --stability=0(구간 이탈)일 때 씬 레이어 최대 blur(px). 안정=1이면 0(선명). */
-  VIEWPORT_BLUR_MAX_PX: 1.6,
-
-  // ── Phase 4C: 지원회사 배너 (이스터에그) ────────────────────────────
-
-  /** Clear 인식 후 양옆 배너가 company로 전환되기까지 지연(ms). 즉각 튀지 않게. */
-  BANNER_SWAP_DELAY_MS: 800,
-
-  /** 배너 idle↔loud(광고 문구) 전환 디바운스(ms) — 깜빡임 없이 차분하게. */
-  BANNER_SORAN_DEBOUNCE_MS: 1400,
 } as const;
 
 export type GameConstants = typeof GAME_CONSTANTS;
@@ -252,9 +239,3 @@ export type GameConstants = typeof GAME_CONSTANTS;
  * 숫자 배열이라 GAME_CONSTANTS(루프 override가 number로 한정)와 분리해 둔다.
  */
 export const SCENE_THRESHOLDS = [0.25, 0.5, 0.75] as const;
-
-/**
- * 클리어 시 배너에 등장하는 지원 회사명(이스터에그).
- * TODO: 실제 회사명으로 교체. 광고가 아닌 애정 어린 오마주.
- */
-export const COMPANY_NAME = '지원회사';

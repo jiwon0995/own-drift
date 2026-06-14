@@ -99,7 +99,7 @@
   .pixel-frame {
     border: 4px solid #0a0706;
     box-shadow:
-      inset 0 0 0 2px #3a2a22,
+      inset 0 0 0 2px #5e4133,
       inset 0 0 0 4px #0a0706,
       0 0 0 2px #2b1a17,
       8px 8px 0 0 rgba(0, 0, 0, 0.5);
@@ -147,51 +147,25 @@
   }
   @keyframes ground-scroll { to { background-position: -24px 0; } }
 
-  /* ── 씬 레이어 선명도·색온도 (Phase 4B) ──
-     --stability(이탈=0)에 반응: 흐려지고·식는다. 안정=1이면 원본.
+  /* ── 씬 레이어 색온도 (Phase 4B) ──
+     --stability(이탈=0)에 반응: 채도·밝기가 식는다. 안정=1이면 원본. (blur 효과는 제거됨)
      러너·UI는 이 래퍼 밖이라 또렷하게 유지 — "세상은 흔들려도 나는 나." */
   .scene-fx {
     filter:
-      blur(calc((1 - var(--stability)) * var(--viewport-blur-max, 1.6px)))
       saturate(calc(0.8 + 0.2 * var(--stability)))
       brightness(calc(0.92 + 0.08 * var(--stability)));
     will-change: filter;
   }
 
-  /* ── 양옆 배너 (Phase 4B/4C) ──
-     idle/loud 배경은 --banner-soran(연속). company는 고정 색 + 조용한 등장. */
-  /* idle/loud 소란: --banner-soran은 이미 JS에서 --stability를 smoothing하므로
-     CSS transition을 얹지 않는다(4A 게이지 색과 동일). 매 프레임 var write에
-     CSS transition을 걸면 영구 재트리거되어 settle하지 않는다. */
-  .side-banner {
+  /* ── 양옆 사이드 배너 (고정 이미지 + 게임 중 효과) ──
+     이미지는 SideBanner가 깔고(왼쪽 banner-1 / 오른쪽 banner-2), 그 위 .side-banner__fx가
+     --stability 기반 소란을 blend로 얹는다. 안정(=1)이면 opacity 0으로 이미지 그대로,
+     구간 이탈(→0)일수록 --banner-soran(loud쪽)이 overlay로 진해진다.
+     --banner-soran은 JS가 --stability를 smoothing해 주입하므로 CSS transition은 얹지 않는다. */
+  .side-banner__fx {
     background: var(--banner-soran);
-  }
-  /* company 배경은 베이스보다 확실히 우선(복합 선택자) + 0→0.3→1 조용한 등장. */
-  .side-banner.side-banner--company {
-    background: var(--color-banner-company);
-    animation: banner-company-in 0.7s ease both;
-  }
-  @keyframes banner-company-in { 0% { opacity: 0; } 40% { opacity: 0.3; } 100% { opacity: 1; } }
-
-  .banner-ad {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 9px;
-    color: #ffffff55;
-    border: 2px solid #ffffff1a;
-    box-shadow: inset 1px 1px 0 #ffffff0d;
-    transition: color 0.5s, border-color 0.5s;
-  }
-  .side-banner--loud .banner-ad { color: #ffffff88; border-color: #ff961433; }
-  .banner-ad--company {
-    color: var(--color-accent-stable);
-    border-color: #ffb25744;
-    font-size: 11px;
-    letter-spacing: 1px;
+    opacity: calc((1 - var(--stability)) * 0.6);
+    mix-blend-mode: overlay;
   }
 
   /* ── 음소거 버튼 (Phase 5) ──
@@ -201,10 +175,9 @@
   .mute-btn:hover  { --mute-icon: var(--color-accent-stable); }
   .mute-btn[data-muted="true"] { --mute-icon: var(--color-ink-faint); }
 
-  /* prefers-reduced-motion: 움직임(스크롤·전환)만 끈다. blur/색은 모션 아님이라 유지. */
+  /* prefers-reduced-motion: 움직임(스크롤·전환)만 끈다. 색온도는 모션 아님이라 유지. */
   @media (prefers-reduced-motion: reduce) {
     .scene-layer       { animation: none; }
     .ground-scroll-line { animation: none; }
-    .side-banner.side-banner--company { animation: none; }
   }
 }

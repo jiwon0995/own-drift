@@ -16,7 +16,7 @@ export const SCREEN_COPY: ScreenCopy = {
     startButton: '내딛기',
   },
   findPace: {
-    bubble: '이제 가장 편안한 속도로 걸어보세요.\n오래 머물 수 있는 리듬이면 충분해요.',
+    bubble: '이제 가장 편안한 속도를 유지해보세요.\n오래 머물 수 있는 리듬이면 충분해요.',
   },
 };
 
@@ -26,8 +26,8 @@ export const SCREEN_COPY: ScreenCopy = {
  */
 export const JOURNEY_START_PARAGRAPHS = [
   '이제부터는 진짜 여정이에요.',
-  '빠르게 가면 먼저 도착할 수 있지만,\n그만큼 쉽게 지칠 수도 있어요.',
-  '천천히 가는 것도 괜찮아요.\n다만 멈추지 않고,\n나에게 맞는 리듬을 잃지 않는 게 중요해요.',
+  '빠르게 가면 \n그만큼 쉽게 지칠 수도 있어요.',
+  '천천히 가는 것도 괜찮아요.\n다만 리듬을 잃지 않는 게 중요해요.',
   '이 길의 정답은 하나가 아니에요.\n중요한 건 내 속도로 나아가는 것.',
 ] as const;
 
